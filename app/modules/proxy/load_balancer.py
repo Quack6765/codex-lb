@@ -20,7 +20,7 @@ from app.modules.usage.repository import UsageRepository
 
 @dataclass
 class RuntimeState:
-    reset_at: int | None = None
+    reset_at: float | None = None
     last_error_at: float | None = None
     last_selected_at: float | None = None
     error_count: int = 0
@@ -179,10 +179,10 @@ def _apply_secondary_quota(
     *,
     status: AccountStatus,
     primary_used: float | None,
-    runtime_reset: int | None,
+    runtime_reset: float | None,
     secondary_used: float | None,
     secondary_reset: int | None,
-) -> tuple[AccountStatus, float | None, int | None]:
+) -> tuple[AccountStatus, float | None, float | None]:
     used_percent = primary_used
     reset_at = runtime_reset
 

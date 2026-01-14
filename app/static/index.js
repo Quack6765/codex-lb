@@ -569,16 +569,9 @@
 			return acc;
 		}, {});
 
-	const mergeUsageIntoAccounts = (
-		accounts,
-		primaryUsage,
-		secondaryUsage,
-		summary,
-	) => {
+	const mergeUsageIntoAccounts = (accounts, primaryUsage, secondaryUsage) => {
 		const primaryMap = buildUsageIndex(primaryUsage || []);
 		const secondaryMap = buildUsageIndex(secondaryUsage || []);
-		const resetAtPrimary = summary?.primaryWindow?.resetAt ?? null;
-		const resetAtSecondary = summary?.secondaryWindow?.resetAt ?? null;
 		return accounts.map((account) => {
 			const primaryRow = primaryMap[account.id];
 			const secondaryRow = secondaryMap[account.id];
@@ -598,8 +591,8 @@
 						account.usage?.secondaryRemainingPercent ??
 						0,
 				},
-				resetAtPrimary: resetAtPrimary ?? account.resetAtPrimary ?? null,
-				resetAtSecondary: resetAtSecondary ?? account.resetAtSecondary ?? null,
+				resetAtPrimary: account.resetAtPrimary ?? null,
+				resetAtSecondary: account.resetAtSecondary ?? null,
 			};
 		});
 	};
@@ -1191,7 +1184,6 @@
 						accountsResult.value,
 						primaryUsage,
 						secondaryUsage,
-						summary,
 					);
 					this.applyData(
 						{

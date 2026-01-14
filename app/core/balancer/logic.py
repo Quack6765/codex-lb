@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Iterable
 
 from app.core.balancer.types import UpstreamError
-from app.core.utils.retry import parse_retry_after
+from app.core.utils.retry import backoff_seconds, parse_retry_after
 from app.db.models import AccountStatus
 
 PERMANENT_FAILURE_CODES = {
@@ -22,7 +22,7 @@ class AccountState:
     account_id: str
     status: AccountStatus
     used_percent: float | None = None
-    reset_at: int | None = None
+    reset_at: float | None = None
     last_error_at: float | None = None
     last_selected_at: float | None = None
     error_count: int = 0
@@ -97,18 +97,11 @@ def handle_rate_limit(state: AccountState, error: UpstreamError) -> None:
     state.status = AccountStatus.RATE_LIMITED
     state.error_count += 1
     state.last_error_at = time.time()
-
-    reset_at = _extract_reset_at(error)
-    if reset_at is not None:
-        state.reset_at = reset_at
-        return
-
     message = error.get("message")
     delay = parse_retry_after(message) if message else None
-    if delay:
-        state.reset_at = int(time.time() + delay)
-    else:
-        state.reset_at = int(time.time() + 300)
+    if delay is None:
+        delay = backoff_seconds(state.error_count)
+    state.reset_at = time.time() + delay
 
 
 def handle_quota_exceeded(state: AccountState, error: UpstreamError) -> None:

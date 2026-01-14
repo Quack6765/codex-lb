@@ -38,19 +38,23 @@ def test_select_account_skips_rate_limited_until_reset():
 
 
 def test_handle_rate_limit_sets_reset_at_from_message():
+    now = time.time()
     state = AccountState("a", AccountStatus.ACTIVE, used_percent=5.0)
     handle_rate_limit(state, {"message": "Try again in 1.5s"})
     assert state.status == AccountStatus.RATE_LIMITED
     assert state.reset_at is not None
+    delay = state.reset_at - now
+    assert 1.2 <= delay <= 2.0
 
 
-def test_handle_rate_limit_uses_resets_in_seconds():
+def test_handle_rate_limit_uses_backoff_when_no_delay():
     now = time.time()
     state = AccountState("a", AccountStatus.ACTIVE, used_percent=5.0)
-    handle_rate_limit(state, {"resets_in_seconds": 10})
+    handle_rate_limit(state, {"message": "Rate limit exceeded."})
     assert state.status == AccountStatus.RATE_LIMITED
     assert state.reset_at is not None
-    assert int(now) <= state.reset_at <= int(now) + 15
+    delay = state.reset_at - now
+    assert 0.15 <= delay <= 0.3
 
 
 def test_handle_quota_exceeded_sets_used_percent():

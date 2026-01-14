@@ -2,10 +2,17 @@ from __future__ import annotations
 
 import base64
 import json
+from datetime import datetime, timezone
 
 import pytest
 
 from app.core.auth import fallback_account_id
+from app.core.crypto import TokenEncryptor
+from app.core.utils.time import utcnow
+from app.db.models import Account, AccountStatus
+from app.db.session import SessionLocal
+from app.modules.accounts.repository import AccountsRepository
+from app.modules.usage.repository import UsageRepository
 
 pytestmark = pytest.mark.integration
 
@@ -31,6 +38,32 @@ def _make_auth_json(account_id: str | None, email: str, plan_type: str = "plus")
     if account_id:
         tokens["accountId"] = account_id
     return {"tokens": tokens}
+
+
+def _make_account(account_id: str, email: str, plan_type: str = "plus") -> Account:
+    encryptor = TokenEncryptor()
+    return Account(
+        id=account_id,
+        email=email,
+        plan_type=plan_type,
+        access_token_encrypted=encryptor.encrypt("access"),
+        refresh_token_encrypted=encryptor.encrypt("refresh"),
+        id_token_encrypted=encryptor.encrypt("id"),
+        last_refresh=utcnow(),
+        status=AccountStatus.ACTIVE,
+        deactivation_reason=None,
+    )
+
+
+def _iso_utc(epoch_seconds: int) -> str:
+    return (
+        datetime.fromtimestamp(epoch_seconds, tz=timezone.utc)
+        .isoformat()
+        .replace(
+            "+00:00",
+            "Z",
+        )
+    )
 
 
 @pytest.mark.asyncio
@@ -78,3 +111,53 @@ async def test_delete_account_removes_from_list(async_client):
     assert accounts.status_code == 200
     data = accounts.json()["accounts"]
     assert all(account["accountId"] != "acc_delete" for account in data)
+
+
+@pytest.mark.asyncio
+async def test_accounts_list_includes_per_account_reset_times(async_client, db_setup):
+    primary_a = 1735689600
+    primary_b = 1735693200
+    secondary_a = 1736294400
+    secondary_b = 1736380800
+
+    async with SessionLocal() as session:
+        accounts_repo = AccountsRepository(session)
+        usage_repo = UsageRepository(session)
+
+        await accounts_repo.upsert(_make_account("acc_reset_a", "a@example.com"))
+        await accounts_repo.upsert(_make_account("acc_reset_b", "b@example.com"))
+
+        await usage_repo.add_entry(
+            "acc_reset_a",
+            10.0,
+            window="primary",
+            reset_at=primary_a,
+        )
+        await usage_repo.add_entry(
+            "acc_reset_b",
+            20.0,
+            window="primary",
+            reset_at=primary_b,
+        )
+        await usage_repo.add_entry(
+            "acc_reset_a",
+            30.0,
+            window="secondary",
+            reset_at=secondary_a,
+        )
+        await usage_repo.add_entry(
+            "acc_reset_b",
+            40.0,
+            window="secondary",
+            reset_at=secondary_b,
+        )
+
+    response = await async_client.get("/api/accounts")
+    assert response.status_code == 200
+    payload = response.json()
+    accounts = {item["accountId"]: item for item in payload["accounts"]}
+
+    assert accounts["acc_reset_a"]["resetAtPrimary"] == _iso_utc(primary_a)
+    assert accounts["acc_reset_b"]["resetAtPrimary"] == _iso_utc(primary_b)
+    assert accounts["acc_reset_a"]["resetAtSecondary"] == _iso_utc(secondary_a)
+    assert accounts["acc_reset_b"]["resetAtSecondary"] == _iso_utc(secondary_b)
