@@ -66,9 +66,9 @@ class AccountsService:
         claims = claims_from_auth(auth)
 
         email = claims.email or DEFAULT_EMAIL
-        plan_type = coerce_account_plan_type(claims.plan_type, DEFAULT_PLAN)
         raw_account_id = claims.account_id
         account_id = generate_unique_account_id(raw_account_id, email)
+        plan_type = coerce_account_plan_type(claims.plan_type, DEFAULT_PLAN)
         last_refresh = to_utc_naive(auth.last_refresh_at) if auth.last_refresh_at else utcnow()
 
         account = Account(

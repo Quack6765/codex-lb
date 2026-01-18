@@ -91,6 +91,20 @@ def claims_from_auth(auth: AuthFile) -> AccountClaims:
 
 
 def generate_unique_account_id(account_id: str | None, email: str | None) -> str:
+    """Generate a unique account ID that combines OpenAI account ID with email.
+
+    For team accounts under the same OpenAI organization, the chatgpt_account_id
+    is shared across all team members. This function creates a unique identifier
+    by appending an email-based hash suffix when both account_id and email are
+    available.
+
+    Args:
+        account_id: The OpenAI chatgpt_account_id (may be shared across team members)
+        email: The user's email address
+
+    Returns:
+        A unique account identifier suitable for use as a primary key
+    """
     if account_id and email and email != DEFAULT_EMAIL:
         email_hash = hashlib.sha256(email.encode()).hexdigest()[:8]
         return f"{account_id}_{email_hash}"
@@ -100,6 +114,7 @@ def generate_unique_account_id(account_id: str | None, email: str | None) -> str
 
 
 def fallback_account_id(email: str | None) -> str:
+    """Generate a fallback account ID when no OpenAI account ID is available."""
     if email and email != DEFAULT_EMAIL:
         digest = hashlib.sha256(email.encode()).hexdigest()[:12]
         return f"email_{digest}"
