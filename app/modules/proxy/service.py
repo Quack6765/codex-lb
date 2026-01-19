@@ -6,7 +6,6 @@ from datetime import timedelta
 from typing import AsyncIterator, Mapping
 
 import anyio
-from pydantic import ValidationError
 
 from app.core import usage as usage_core
 from app.core.auth.refresh import RefreshError

@@ -5,8 +5,7 @@ from pathlib import Path
 from typing import AsyncIterator, Awaitable, TypeVar
 
 import anyio
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.core.config.settings import get_settings
 from app.db.migrations import run_migrations
@@ -82,6 +81,7 @@ async def init_db() -> None:
             logger.exception("Failed to apply database migrations")
             if get_settings().database_migrations_fail_fast:
                 raise
-            
+
+
 async def close_db() -> None:
     await engine.dispose()
