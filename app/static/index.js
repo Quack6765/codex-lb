@@ -597,10 +597,10 @@
 		});
 	};
 
-	const buildUsageWindow = (entries, summaryWindow) => {
-		const entryList = entries || [];
-		const capacityFromEntries = entryList.reduce(
-			(acc, entry) => acc + (toNumber(entry.capacityCredits) || 0),
+		const buildUsageWindow = (entries, summaryWindow) => {
+			const entryList = entries || [];
+			const capacityFromEntries = entryList.reduce(
+				(acc, entry) => acc + (toNumber(entry.capacityCredits) || 0),
 			0,
 		);
 		const remainingFromEntries = entryList.reduce(
@@ -616,18 +616,19 @@
 			toNumber(summaryWindow?.remainingCredits) || 0,
 			remainingFromEntries,
 		);
-		return {
-			capacity,
-			remaining,
-			resetAt: summaryWindow?.resetAt ?? null,
-			windowMinutes: summaryWindow?.windowMinutes ?? null,
-			byAccount: entryList.map((entry) => ({
-				accountId: entry.accountId,
-				capacityCredits: toNumber(entry.capacityCredits) || 0,
-				remainingCredits: toNumber(entry.remainingCredits) || 0,
-			})),
+			return {
+				capacity,
+				remaining,
+				resetAt: summaryWindow?.resetAt ?? null,
+				windowMinutes: summaryWindow?.windowMinutes ?? null,
+				byAccount: entryList.map((entry) => ({
+					accountId: entry.accountId,
+					capacityCredits: toNumber(entry.capacityCredits) || 0,
+					remainingCredits: toNumber(entry.remainingCredits) || 0,
+					remainingPercentAvg: toNumber(entry.remainingPercentAvg),
+				})),
+			};
 		};
-	};
 
 	const buildDashboardDataFromApi = ({
 		summary,
@@ -683,7 +684,7 @@
 			return acc;
 		}, {});
 
-	const buildRemainingItems = (entries, accounts, capacity) => {
+	const buildRemainingItems = (entries, accounts, capacity, windowKey) => {
 		const accountMap = new Map(
 			(accounts || []).map((account) => [account.id, account]),
 		);
@@ -691,7 +692,23 @@
 			const account = accountMap.get(entry.accountId);
 			const label = account ? account.email : entry.accountId;
 			const value = toNumber(entry.remainingCredits) || 0;
-			const rawPercent = capacity > 0 ? (value / capacity) * 100 : 0;
+			const percentFromApi = toNumber(entry.remainingPercentAvg);
+			const percentFromAccount =
+				windowKey === "primary"
+					? toNumber(account?.usage?.primaryRemainingPercent)
+					: windowKey === "secondary"
+						? toNumber(account?.usage?.secondaryRemainingPercent)
+						: null;
+			const entryCapacity = toNumber(entry.capacityCredits) || 0;
+			const denominator = entryCapacity > 0 ? entryCapacity : capacity;
+			const rawPercent =
+				percentFromApi !== null
+					? percentFromApi
+					: percentFromAccount !== null
+						? percentFromAccount
+					: denominator > 0
+						? (value / denominator) * 100
+						: 0;
 			const remainingPercent = Math.min(100, Math.max(0, rawPercent));
 			return {
 				accountId: entry.accountId,
@@ -814,6 +831,7 @@
 				usage.byAccount || [],
 				accounts,
 				capacity,
+				window.key,
 			);
 			const gradient = buildDonutGradient(items, capacity);
 			const legendItems = items.map((item) => ({

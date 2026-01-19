@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
+from collections import Counter
 from typing import Mapping
 
 from app.core.auth.refresh import RefreshError
@@ -38,6 +39,7 @@ class UsageUpdater:
         if not settings.usage_refresh_enabled:
             return
 
+        shared_chatgpt_account_ids = _shared_chatgpt_account_ids(accounts)
         now = utcnow()
         interval = settings.usage_refresh_interval_seconds
         for account in accounts:
@@ -46,11 +48,16 @@ class UsageUpdater:
             latest = latest_usage.get(account.id)
             if latest and (now - latest.recorded_at).total_seconds() < interval:
                 continue
+            usage_account_id = (
+                None
+                if account.chatgpt_account_id and account.chatgpt_account_id in shared_chatgpt_account_ids
+                else account.chatgpt_account_id
+            )
             # NOTE: AsyncSession is not safe for concurrent use. Run sequentially
             # within the request-scoped session to avoid PK collisions and
             # flush-time warnings (SAWarning: Session.add during flush).
             try:
-                await self._refresh_account(account)
+                await self._refresh_account(account, usage_account_id=usage_account_id)
             except Exception as exc:
                 logger.warning(
                     "Usage refresh failed account_id=%s request_id=%s error=%s",
@@ -62,12 +69,12 @@ class UsageUpdater:
                 # swallow per-account failures so the whole refresh loop keeps going
                 continue
 
-    async def _refresh_account(self, account: Account) -> None:
+    async def _refresh_account(self, account: Account, *, usage_account_id: str | None) -> None:
         access_token = self._encryptor.decrypt(account.access_token_encrypted)
         try:
             payload = await fetch_usage(
                 access_token=access_token,
-                account_id=account.chatgpt_account_id,
+                account_id=usage_account_id,
             )
         except UsageFetchError as exc:
             if exc.status_code != 401 or not self._auth_manager:
@@ -80,7 +87,7 @@ class UsageUpdater:
             try:
                 payload = await fetch_usage(
                     access_token=access_token,
-                    account_id=account.chatgpt_account_id,
+                    account_id=usage_account_id,
                 )
             except UsageFetchError:
                 return
@@ -145,3 +152,10 @@ def _window_minutes(limit_seconds: int | None) -> int | None:
     if not limit_seconds or limit_seconds <= 0:
         return None
     return max(1, math.ceil(limit_seconds / 60))
+
+
+def _shared_chatgpt_account_ids(accounts: list[Account]) -> set[str]:
+    counts = Counter(
+        account.chatgpt_account_id for account in accounts if account.chatgpt_account_id
+    )
+    return {account_id for account_id, count in counts.items() if count > 1}
