@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import AsyncIterator, Awaitable, TypeVar
+import logging
 
 import anyio
 from sqlalchemy import text
@@ -81,12 +82,6 @@ async def init_db() -> None:
             logger.exception("Failed to apply database migrations")
             if get_settings().database_migrations_fail_fast:
                 raise
+            
 async def close_db() -> None:
     await engine.dispose()
-
-
-async def _ensure_sqlite_request_logs_columns(conn: AsyncConnection) -> None:
-    result = await conn.execute(text("PRAGMA table_info(request_logs)"))
-    columns = {row[1] for row in result.fetchall()}
-    if "reasoning_effort" not in columns:
-        await conn.execute(text("ALTER TABLE request_logs ADD COLUMN reasoning_effort VARCHAR"))
