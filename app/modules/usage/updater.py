@@ -155,7 +155,5 @@ def _window_minutes(limit_seconds: int | None) -> int | None:
 
 
 def _shared_chatgpt_account_ids(accounts: list[Account]) -> set[str]:
-    counts = Counter(
-        account.chatgpt_account_id for account in accounts if account.chatgpt_account_id
-    )
+    counts = Counter(account.chatgpt_account_id for account in accounts if account.chatgpt_account_id)
     return {account_id for account_id, count in counts.items() if count > 1}

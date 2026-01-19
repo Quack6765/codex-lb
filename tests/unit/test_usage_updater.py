@@ -8,7 +8,7 @@ import pytest
 from app.core.crypto import TokenEncryptor
 from app.core.usage.models import UsagePayload
 from app.db.models import Account, AccountStatus
-from app.modules.proxy.usage_updater import UsageUpdater
+from app.modules.usage.updater import UsageUpdater
 
 pytestmark = pytest.mark.unit
 
@@ -65,7 +65,7 @@ async def test_usage_updater_omits_shared_chatgpt_account_id(monkeypatch) -> Non
             }
         )
 
-    monkeypatch.setattr("app.modules.proxy.usage_updater.fetch_usage", stub_fetch_usage)
+    monkeypatch.setattr("app.modules.usage.updater.fetch_usage", stub_fetch_usage)
 
     usage_repo = StubUsageRepository()
     updater = UsageUpdater(usage_repo, accounts_repo=None)
