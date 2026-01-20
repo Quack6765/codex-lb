@@ -483,6 +483,10 @@
 		if (percent <= 50) return "limited";
 		return "success";
 	};
+	const calculateProgressTextClass = (status, remainingPercent) => {
+		const cls = calculateProgressClass(status, remainingPercent);
+		return cls ? `text-${cls}` : "";
+	};
 	const progressClass = (status) => PROGRESS_CLASS_BY_STATUS[status] || "";
 
 	const normalizeSearchInput = (value) =>
@@ -1550,6 +1554,9 @@
 			},
 			calculateProgressClass(status, remainingPercent) {
 				return calculateProgressClass(status, remainingPercent);
+			},
+			calculateProgressTextClass(status, remainingPercent) {
+				return calculateProgressTextClass(status, remainingPercent);
 			},
 			async copyToClipboard(value, label) {
 				if (!value) {

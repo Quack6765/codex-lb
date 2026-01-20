@@ -153,24 +153,24 @@
               <table>
                 <thead>
                   <tr>
-                    <th class="highlighted indicator">Time</th>
-                    <th>Account</th>
-                    <th>Model</th>
-                    <th>Status</th>
-                    <th>Error</th>
-                    <th style="text-align: right">Tokens</th>
-                    <th style="text-align: right">Cost</th>
+                    <th class="highlighted indicator" style="width: 15%">Time</th>
+                    <th style="width: 25%">Account</th>
+                    <th style="width: 15%">Model</th>
+                    <th style="width: 10%">Status</th>
+                    <th style="width: 15%">Error</th>
+                    <th style="text-align: right; width: 10%">Tokens</th>
+                    <th style="text-align: right; width: 10%">Cost</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template x-for="request in dashboard.requests" :key="request.key">
                     <tr>
                       <td x-text="request.time"></td>
-                      <td x-text="request.account"></td>
-                      <td x-text="request.model"></td>
+                      <td class="cell-truncate" x-text="request.account" :title="request.account"></td>
+                      <td class="cell-truncate" x-text="request.model" :title="request.model"></td>
                       <td><span class="status-pill" :class="request.status.class" x-text="request.status.label"></span>
                       </td>
-                      <td x-text="request.error" :title="request.errorTitle || ''"></td>
+                      <td class="cell-truncate" x-text="request.error" :title="request.errorTitle || ''"></td>
                       <td style="text-align: right" x-text="request.tokens"></td>
                       <td style="text-align: right" x-text="request.cost"></td>
                     </tr>
@@ -225,7 +225,9 @@
                         <td><span class="status-pill" :class="account.status"
                             x-text="statusLabel(account.status)"></span>
                         </td>
-                        <td style="text-align: right" x-text="formatPercent(account.usage?.secondaryRemainingPercent)">
+                        <td style="text-align: right"
+                          :class="calculateProgressTextClass(account.status, account.usage?.secondaryRemainingPercent)"
+                          x-text="formatPercent(account.usage?.secondaryRemainingPercent)">
                         </td>
                         <td x-text="formatQuotaResetLabel(account.resetAtSecondary)"></td>
                       </tr>

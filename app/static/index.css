@@ -360,14 +360,17 @@ body {
   text-align: right;
 }
 
+.text-success,
 .legend-detail-value.success {
   color: var(--status-active-text);
 }
 
+.text-limited,
 .legend-detail-value.limited {
   color: var(--status-warning-text);
 }
 
+.text-error,
 .legend-detail-value.error {
   color: var(--status-error-text);
 }
