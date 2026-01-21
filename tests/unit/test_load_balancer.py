@@ -128,11 +128,12 @@ def test_handle_permanent_failure_sets_reason():
     assert state.status == AccountStatus.DEACTIVATED
     assert state.deactivation_reason is not None
 
+
 def test_apply_usage_quota_respects_runtime_reset_for_quota_exceeded(monkeypatch):
     now = 1_700_000_000.0
     future = now + 3600.0
     monkeypatch.setattr("app.core.usage.quota.time.time", lambda: now)
-    
+
     # Normally 50% used would reset it to ACTIVE, but runtime_reset is in future
     status, used_percent, reset_at = apply_usage_quota(
         status=AccountStatus.QUOTA_EXCEEDED,
@@ -152,7 +153,7 @@ def test_apply_usage_quota_respects_runtime_reset_for_rate_limited(monkeypatch):
     now = 1_700_000_000.0
     future = now + 3600.0
     monkeypatch.setattr("app.core.usage.quota.time.time", lambda: now)
-    
+
     # Normally 50% used would reset it to ACTIVE, but runtime_reset is in future
     status, used_percent, reset_at = apply_usage_quota(
         status=AccountStatus.RATE_LIMITED,
@@ -172,7 +173,7 @@ def test_apply_usage_quota_resets_to_active_if_runtime_reset_expired(monkeypatch
     now = 1_700_000_000.0
     past = now - 3600.0
     monkeypatch.setattr("app.core.usage.quota.time.time", lambda: now)
-    
+
     status, used_percent, reset_at = apply_usage_quota(
         status=AccountStatus.RATE_LIMITED,
         primary_used=50.0,
