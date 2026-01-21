@@ -25,6 +25,7 @@ _INSERT_MIGRATION = """
 INSERT INTO schema_migrations (name, applied_at)
 VALUES (:name, :applied_at)
 ON CONFLICT(name) DO NOTHING
+RETURNING name
 """
 
 
@@ -60,8 +61,8 @@ async def _apply_migration(session: AsyncSession, migration: Migration) -> bool:
                 "applied_at": _utcnow_iso(),
             },
         )
-        rowcount = getattr(result, "rowcount", 0) or 0
-        if not rowcount:
+        inserted = result.scalar_one_or_none()
+        if inserted is None:
             return False
         await migration.run(session)
     return True
