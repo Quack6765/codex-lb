@@ -886,6 +886,36 @@ button {
   font-weight: 500;
 }
 
+.settings-fieldset {
+  margin-top: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.settings-fieldset legend {
+  padding: 0 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  margin-left: -4px;
+}
+
+.settings-fieldset label {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.settings-fieldset input[type="checkbox"] {
+  accent-color: var(--accent-primary);
+  margin-right: 8px;
+}
+
+.settings-fieldset .text-muted {
+  margin-top: 6px;
+  margin-left: 22px;
+}
+
 .token-fieldset {
   margin-top: 24px;
   border: 1px solid var(--border-strong);
