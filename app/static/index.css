@@ -49,13 +49,13 @@
   --text-muted: #71717a;
 
   --status-active-bg: #dcfce7;
-  --status-active-text: #15803d;
+  --status-active-text: #16a34a;
 
   --status-warning-bg: #fef9c3;
-  --status-warning-text: #854d0e;
+  --status-warning-text: #ca8a04;
 
   --status-error-bg: #fee2e2;
-  --status-error-text: #991b1b;
+  --status-error-text: #dc2626;
 
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -385,6 +385,7 @@ body {
   background: var(--bg-surface);
   color: var(--text-muted);
   line-height: 1;
+  white-space: nowrap;
 }
 
 .status-pill.active {
@@ -492,6 +493,10 @@ body {
   gap: 6px;
 }
 
+.summary-list .progress-row+.progress-row {
+  margin-top: 16px;
+}
+
 .progress-row label {
   font-size: 13px;
   color: var(--text-muted);
@@ -543,9 +548,28 @@ body {
   font-weight: 500;
 }
 
-.account-actions button:hover {
+
+
+.inline-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-actions button {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
   background: var(--bg-surface);
+  color: var(--text-main);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.inline-actions button:hover {
   border-color: var(--accent-primary);
+  background: var(--bg-list-hover);
 }
 
 .table-wrap {
@@ -623,6 +647,18 @@ tr {
 tr:hover td {
   background: var(--bg-list-hover);
   color: var(--text-main);
+}
+
+tr:hover td.text-success {
+  color: var(--status-active-text);
+}
+
+tr:hover td.text-limited {
+  color: var(--status-warning-text);
+}
+
+tr:hover td.text-error {
+  color: var(--status-error-text);
 }
 
 tr:hover {
@@ -722,7 +758,22 @@ button {
 }
 
 .list-actions label[role="button"]:hover {
+  background: var(--bg-list-hover);
+  border-color: var(--accent-primary);
+}
+
+.list-actions label[role="button"],
+.account-actions button {
   background: var(--bg-surface);
+  border-color: var(--border-strong);
+  color: var(--text-main);
+  transition: all 0.2s;
+}
+
+.list-actions label[role="button"]:hover,
+.account-actions button:hover {
+  background: var(--bg-list-hover);
+  border-color: var(--accent-primary);
 }
 
 .dialog-backdrop {

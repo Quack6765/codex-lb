@@ -897,11 +897,18 @@
 					100,
 					Math.max(0, (consumed / capacity) * 100),
 				);
+				let consumedClass = "success";
+				if (consumedPercent >= 80) {
+					consumedClass = "error";
+				} else if (consumedPercent >= 50) {
+					consumedClass = "limited";
+				}
 				legendItems.push({
 					label: "Consumed",
 					fullLabel: "Consumed",
 					detailLabel: "",
 					detailValue: formatPercent(consumedPercent),
+					valueClass: consumedClass,
 					color: CONSUMED_COLOR,
 				});
 			}
