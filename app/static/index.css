@@ -860,6 +860,10 @@ button {
   transform: translate(-50%, -50%) scale(1);
 }
 
+.window-body {
+  padding: 20px;
+}
+
 .text-muted {
   color: var(--text-muted);
   font-size: 13px;
