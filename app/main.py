@@ -82,21 +82,6 @@ def create_app() -> FastAPI:
         request: Request,
         exc: RequestValidationError,
     ) -> Response:
-        if request.url.path.startswith("/v1/chat"):
-            logger.error(
-                "Chat completion validation error: %s",
-                exc.errors(),
-            )
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "error": {
-                        "message": str(exc.errors()),
-                        "type": "invalid_request_error",
-                        "code": "validation_error",
-                    }
-                },
-            )
         if request.url.path.startswith("/api/"):
             return JSONResponse(
                 status_code=422,

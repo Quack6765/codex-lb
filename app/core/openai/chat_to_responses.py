@@ -1,12 +1,8 @@
 from __future__ import annotations
 
-import logging
-
 from app.core.openai.chat_completions import ChatCompletionRequest
 from app.core.openai.requests import ResponsesReasoning, ResponsesRequest
 from app.core.types import JsonValue
-
-logger = logging.getLogger(__name__)
 
 
 def chat_to_responses_request(chat_req: ChatCompletionRequest) -> ResponsesRequest:
@@ -65,12 +61,6 @@ def chat_to_responses_request(chat_req: ChatCompletionRequest) -> ResponsesReque
         reasoning=reasoning,
         store=False,
         stream=True,
-    )
-
-    logger.debug(
-        "Converted chat completion to responses request model=%s input_count=%d",
-        responses_req.model,
-        len(responses_req.input),
     )
 
     return responses_req

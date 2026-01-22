@@ -107,21 +107,12 @@ class ChatCompletionsService:
         responses_request = chat_to_responses_request(payload)
         responses_request.stream = True
 
-        logger.debug(
-            "Chat to responses conversion model=%s input_items=%d instructions_len=%d",
-            responses_request.model,
-            len(responses_request.input),
-            len(responses_request.instructions),
-        )
-
         full_response_data: dict = {}
 
         async def _call(target: Account) -> ChatCompletionResponse:
             nonlocal full_response_data
             access_token = self._encryptor.decrypt(target.access_token_encrypted)
             account_id_header = _header_account_id(target.chatgpt_account_id)
-
-            logger.debug("Calling upstream responses API for account=%s", target.id)
 
             stream = core_stream_responses(
                 responses_request,

@@ -21,13 +21,6 @@ async def chat_completions(
     payload: ChatCompletionRequest = Body(...),
     context: ChatCompletionsContext = Depends(get_chat_completions_context),
 ) -> Response:
-    logger.info(
-        "Chat completions request model=%s messages=%d stream=%s",
-        payload.model,
-        len(payload.messages),
-        payload.stream,
-    )
-
     rate_limit_headers = await context.rate_limit_headers()
 
     if payload.stream:
