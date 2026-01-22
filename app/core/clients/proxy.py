@@ -90,6 +90,8 @@ async def _iter_sse_lines(
 
 async def _error_event_from_response(resp: aiohttp.ClientResponse) -> ResponseFailedEvent:
     fallback_message = f"Upstream error: HTTP {resp.status}"
+    if resp.reason:
+        fallback_message += f" {resp.reason}"
     try:
         data = await resp.json(content_type=None)
     except Exception:
@@ -117,6 +119,8 @@ async def _error_event_from_response(resp: aiohttp.ClientResponse) -> ResponseFa
 
 async def _error_payload_from_response(resp: aiohttp.ClientResponse) -> OpenAIErrorEnvelope:
     fallback_message = f"Upstream error: HTTP {resp.status}"
+    if resp.reason:
+        fallback_message += f" {resp.reason}"
     try:
         data = await resp.json(content_type=None)
     except Exception:
