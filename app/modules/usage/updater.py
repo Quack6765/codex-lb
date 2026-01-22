@@ -94,6 +94,9 @@ class UsageUpdater:
                 account_id=usage_account_id,
             )
         except UsageFetchError as exc:
+            if _is_client_error(exc.status_code) and exc.status_code != 401:
+                await self._deactivate_for_client_error(account, exc)
+                return
             if exc.status_code != 401 or not self._auth_manager:
                 return
             try:
@@ -106,8 +109,25 @@ class UsageUpdater:
                     access_token=access_token,
                     account_id=usage_account_id,
                 )
-            except UsageFetchError:
+            except UsageFetchError as retry_exc:
+                if _is_client_error(retry_exc.status_code) and retry_exc.status_code != 401:
+                    await self._deactivate_for_client_error(account, retry_exc)
                 return
+
+    async def _deactivate_for_client_error(self, account: Account, exc: UsageFetchError) -> None:
+        if not self._auth_manager:
+            return
+        reason = f"Usage API error: HTTP {exc.status_code} - {exc.message}"
+        logger.warning(
+            "Deactivating account due to client error account_id=%s status=%s message=%s request_id=%s",
+            account.id,
+            exc.status_code,
+            exc.message,
+            get_request_id(),
+        )
+        await self._auth_manager._repo.update_status(account.id, AccountStatus.DEACTIVATED, reason)
+        account.status = AccountStatus.DEACTIVATED
+        account.deactivation_reason = reason
 
         rate_limit = payload.rate_limit
         primary = rate_limit.primary_window if rate_limit else None
@@ -174,3 +194,7 @@ def _window_minutes(limit_seconds: int | None) -> int | None:
 def _shared_chatgpt_account_ids(accounts: list[Account]) -> set[str]:
     counts = Counter(account.chatgpt_account_id for account in accounts if account.chatgpt_account_id)
     return {account_id for account_id, count in counts.items() if count > 1}
+
+
+def _is_client_error(status_code: int) -> bool:
+    return 400 <= status_code < 500

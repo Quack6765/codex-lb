@@ -273,7 +273,10 @@
                 <tbody>
                   <template x-for="request in dashboard.requests" :key="request.key">
                     <tr>
-                      <td x-text="request.time"></td>
+                      <td>
+                        <div x-text="request.time.time"></div>
+                        <div x-text="request.time.date" class="text-muted" style="font-size: 11px;"></div>
+                      </td>
                       <td class="cell-truncate" x-text="request.account" :title="request.account"></td>
                       <td class="cell-truncate" x-text="request.model" :title="request.model"></td>
                       <td><span class="status-pill" :class="request.status.class" x-text="request.status.label"></span>

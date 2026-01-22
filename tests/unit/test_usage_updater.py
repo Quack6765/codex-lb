@@ -122,3 +122,102 @@ async def test_usage_updater_omits_shared_chatgpt_account_id(monkeypatch) -> Non
     await updater.refresh_accounts([acc_a, acc_b, acc_c], latest_usage={})
 
     assert [call["account_id"] for call in calls] == [None, None, "workspace_unique"]
+
+
+class StubAccountsRepository:
+    def __init__(self) -> None:
+        self.status_updates: list[dict[str, Any]] = []
+
+    async def update_status(
+        self,
+        account_id: str,
+        status: AccountStatus,
+        deactivation_reason: str | None = None,
+        reset_at: int | None = None,
+    ) -> bool:
+        self.status_updates.append({
+            "account_id": account_id,
+            "status": status,
+            "deactivation_reason": deactivation_reason,
+        })
+        return True
+
+    async def update_tokens(self, *args: Any, **kwargs: Any) -> bool:
+        return True
+
+
+@pytest.mark.asyncio
+async def test_usage_updater_deactivates_on_4xx_error(monkeypatch) -> None:
+    monkeypatch.setenv("CODEX_LB_USAGE_REFRESH_ENABLED", "true")
+    from app.core.clients.usage import UsageFetchError
+    from app.core.config.settings import get_settings
+
+    get_settings.cache_clear()
+
+    async def stub_fetch_usage_402(**_: Any) -> UsagePayload:
+        raise UsageFetchError(402, "Payment Required")
+
+    monkeypatch.setattr("app.modules.usage.updater.fetch_usage", stub_fetch_usage_402)
+
+    usage_repo = StubUsageRepository()
+    accounts_repo = StubAccountsRepository()
+    updater = UsageUpdater(usage_repo, accounts_repo=accounts_repo)
+
+    acc = _make_account("acc_402", "workspace_402", email="payment@example.com")
+
+    await updater.refresh_accounts([acc], latest_usage={})
+
+    assert len(accounts_repo.status_updates) == 1
+    update = accounts_repo.status_updates[0]
+    assert update["account_id"] == "acc_402"
+    assert update["status"] == AccountStatus.DEACTIVATED
+    assert "402" in update["deactivation_reason"]
+    assert "Payment Required" in update["deactivation_reason"]
+
+
+@pytest.mark.asyncio
+async def test_usage_updater_does_not_deactivate_on_401(monkeypatch) -> None:
+    monkeypatch.setenv("CODEX_LB_USAGE_REFRESH_ENABLED", "true")
+    from app.core.clients.usage import UsageFetchError
+    from app.core.config.settings import get_settings
+
+    get_settings.cache_clear()
+
+    async def stub_fetch_usage_401(**_: Any) -> UsagePayload:
+        raise UsageFetchError(401, "Unauthorized")
+
+    monkeypatch.setattr("app.modules.usage.updater.fetch_usage", stub_fetch_usage_401)
+
+    usage_repo = StubUsageRepository()
+    accounts_repo = StubAccountsRepository()
+    updater = UsageUpdater(usage_repo, accounts_repo=accounts_repo)
+
+    acc = _make_account("acc_401", "workspace_401", email="auth@example.com")
+
+    await updater.refresh_accounts([acc], latest_usage={})
+
+    assert len(accounts_repo.status_updates) == 0
+
+
+@pytest.mark.asyncio
+async def test_usage_updater_does_not_deactivate_on_5xx(monkeypatch) -> None:
+    monkeypatch.setenv("CODEX_LB_USAGE_REFRESH_ENABLED", "true")
+    from app.core.clients.usage import UsageFetchError
+    from app.core.config.settings import get_settings
+
+    get_settings.cache_clear()
+
+    async def stub_fetch_usage_500(**_: Any) -> UsagePayload:
+        raise UsageFetchError(500, "Internal Server Error")
+
+    monkeypatch.setattr("app.modules.usage.updater.fetch_usage", stub_fetch_usage_500)
+
+    usage_repo = StubUsageRepository()
+    accounts_repo = StubAccountsRepository()
+    updater = UsageUpdater(usage_repo, accounts_repo=accounts_repo)
+
+    acc = _make_account("acc_500", "workspace_500", email="server@example.com")
+
+    await updater.refresh_accounts([acc], latest_usage={})
+
+    assert len(accounts_repo.status_updates) == 0

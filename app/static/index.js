@@ -192,10 +192,15 @@
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	});
-	const timeLongFormatter = new Intl.DateTimeFormat("en-US", {
+	const timeFormatter = new Intl.DateTimeFormat("en-US", {
 		hour: "2-digit",
 		minute: "2-digit",
 		second: "2-digit",
+	});
+	const dateFormatter = new Intl.DateTimeFormat("en-US", {
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
 	});
 
 	const createEmptyDashboardData = () => ({
@@ -385,9 +390,12 @@
 	const formatTimeLong = (iso) => {
 		const date = parseDate(iso);
 		if (!date) {
-			return "--";
+			return { time: "--", date: "--" };
 		}
-		return timeLongFormatter.format(date);
+		return {
+			time: timeFormatter.format(date),
+			date: dateFormatter.format(date),
+		};
 	};
 
 	const formatRelative = (ms) => {
