@@ -279,7 +279,8 @@
                       <td><span class="status-pill" :class="request.status.class" x-text="request.status.label"></span>
                       </td>
                       <td class="cell-error">
-                        <div class="error-cell" x-data="{ expanded: false }">
+                        <div class="error-cell" :class="request.isErrorPlaceholder ? 'placeholder' : ''"
+                          x-data="{ expanded: false }">
                           <div class="error-text" :class="!expanded ? 'truncated' : ''"
                             x-text="expanded ? request.errorTitle : request.error"
                             :title="!expanded ? request.errorTitle : ''"></div>

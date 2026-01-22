@@ -1063,11 +1063,11 @@
 			};
 		});
 
-		const requests = state.dashboardData.recentRequests.map((request) => {
-			const rawError = request.errorMessage || request.errorCode || "";
-			const accountLabel = formatAccountLabel(request.accountId, accounts);
-			const modelLabel = formatModelLabel(request.model, request.reasoningEffort);
-			return {
+			const requests = state.dashboardData.recentRequests.map((request) => {
+				const rawError = request.errorMessage || request.errorCode || "";
+				const accountLabel = formatAccountLabel(request.accountId, accounts);
+				const modelLabel = formatModelLabel(request.model, request.reasoningEffort);
+				return {
 				key: `${request.requestId}-${request.timestamp}`,
 				requestId: request.requestId,
 				time: formatTimeLong(request.timestamp),
@@ -1079,12 +1079,13 @@
 				},
 				tokens: formatCompactNumber(request.tokens),
 				tokensTooltip: formatTokensWithCached(request.tokens, request.cachedInputTokens),
-				cost: formatCurrency(request.cost),
-				error: rawError ? truncateText(rawError, 80) : "--",
-				errorTitle: rawError,
-				isTruncated: rawError.length > 20,
-			};
-		});
+					cost: formatCurrency(request.cost),
+					error: rawError ? truncateText(rawError, 80) : "--",
+					errorTitle: rawError,
+					isTruncated: rawError.length > 20,
+					isErrorPlaceholder: !rawError,
+				};
+			});
 
 		return {
 			heroTitle: state.ui.heroTitle,

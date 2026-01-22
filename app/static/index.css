@@ -800,6 +800,14 @@ table {
   min-width: 0;
 }
 
+.error-cell.placeholder {
+  justify-content: center;
+}
+
+.error-cell.placeholder .error-text {
+  text-align: center;
+}
+
 .error-text {
   flex: 1;
   min-width: 0;
