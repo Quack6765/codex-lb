@@ -1069,6 +1069,7 @@
 				cost: formatCurrency(request.cost),
 				error: rawError ? truncateText(rawError, 80) : "--",
 				errorTitle: rawError,
+				isTruncated: rawError.length > 20,
 			};
 		});
 

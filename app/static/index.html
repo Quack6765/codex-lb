@@ -170,7 +170,17 @@
                       <td class="cell-truncate" x-text="request.model" :title="request.model"></td>
                       <td><span class="status-pill" :class="request.status.class" x-text="request.status.label"></span>
                       </td>
-                      <td class="cell-truncate" x-text="request.error" :title="request.errorTitle || ''"></td>
+                      <td class="cell-error">
+                        <div class="error-cell" x-data="{ expanded: false }">
+                          <div class="error-text" :class="!expanded ? 'truncated' : ''"
+                            x-text="expanded ? request.errorTitle : request.error"
+                            :title="!expanded ? request.errorTitle : ''"></div>
+                          <template x-if="request.isTruncated">
+                            <button class="error-toggle" @click="expanded = !expanded"
+                              x-text="expanded ? 'Less' : 'More'"></button>
+                          </template>
+                        </div>
+                      </td>
                       <td style="text-align: right" x-text="request.tokens"></td>
                       <td style="text-align: right" x-text="request.cost"></td>
                     </tr>
