@@ -153,20 +153,43 @@
             <div class="controls-toolbar">
               <div class="controls-group">
                 <input type="text" class="filter-input" placeholder="Search..." x-model="filtersDraft.search"
-                  @keyup.enter="applyFilters()"
-                  style="width: 200px;">
+                  @keyup.enter="applyFilters()" style="width: 200px;">
 
-                <select class="filter-select" x-model="filtersDraft.timeframe">
-                  <option value="all">All time</option>
-                  <option value="1h">Last 1h</option>
-                  <option value="24h">Last 24h</option>
-                  <option value="7d">Last 7d</option>
-                </select>
+                <div class="single-select" x-data="{ open: false }" @click.outside="open = false">
+                  <button type="button" class="filter-select single-select-trigger" @click="open = !open"
+                    :aria-expanded="open">
+                    <span x-text="timeframeLabel(filtersDraft.timeframe)"></span>
+                  </button>
+                  <div class="single-select-menu" x-show="open" x-transition.opacity>
+                    <label class="single-select-item" :class="{ 'is-selected': filtersDraft.timeframe === 'all' }">
+                      <input type="radio" name="timeframe" value="all" x-model="filtersDraft.timeframe"
+                        @change="open = false">
+                      <span>All time</span>
+                    </label>
+                    <label class="single-select-item" :class="{ 'is-selected': filtersDraft.timeframe === '1h' }">
+                      <input type="radio" name="timeframe" value="1h" x-model="filtersDraft.timeframe"
+                        @change="open = false">
+                      <span>Last 1h</span>
+                    </label>
+                    <label class="single-select-item" :class="{ 'is-selected': filtersDraft.timeframe === '24h' }">
+                      <input type="radio" name="timeframe" value="24h" x-model="filtersDraft.timeframe"
+                        @change="open = false">
+                      <span>Last 24h</span>
+                    </label>
+                    <label class="single-select-item" :class="{ 'is-selected': filtersDraft.timeframe === '7d' }">
+                      <input type="radio" name="timeframe" value="7d" x-model="filtersDraft.timeframe"
+                        @change="open = false">
+                      <span>Last 7d</span>
+                    </label>
+                  </div>
+                </div>
+
 
                 <div class="multi-select" x-data="{ open: false }" @click.outside="open = false">
                   <button type="button" class="filter-select multi-select-trigger" @click="open = !open"
                     :aria-expanded="open" :disabled="requestLogOptions.isLoading">
-                    <span x-text="multiSelectSummary(filtersDraft.accountIds, 'All accounts', 'account', 'accounts')"></span>
+                    <span
+                      x-text="multiSelectSummary(filtersDraft.accountIds, 'All accounts', 'account', 'accounts')"></span>
                   </button>
                   <div class="multi-select-menu" x-show="open" x-transition.opacity>
                     <div class="multi-select-actions">
@@ -186,7 +209,8 @@
                 <div class="multi-select" x-data="{ open: false }" @click.outside="open = false">
                   <button type="button" class="filter-select multi-select-trigger" @click="open = !open"
                     :aria-expanded="open" :disabled="requestLogOptions.isLoading">
-                    <span x-text="multiSelectSummary(filtersDraft.modelOptions, 'All models', 'model', 'models')"></span>
+                    <span
+                      x-text="multiSelectSummary(filtersDraft.modelOptions, 'All models', 'model', 'models')"></span>
                   </button>
                   <div class="multi-select-menu" x-show="open" x-transition.opacity>
                     <div class="multi-select-actions">
@@ -239,8 +263,7 @@
                 </div>
 
                 <input type="number" class="filter-input" placeholder="Min Cost ($)" x-model="filtersDraft.minCost"
-                  @keyup.enter="applyFilters()"
-                  style="width: 110px;" step="0.01">
+                  @keyup.enter="applyFilters()" style="width: 110px;" step="0.01">
 
                 <button type="button" class="filter-apply" @click="applyFilters()"
                   :disabled="recentRequestsState.isLoading">Apply</button>
@@ -296,7 +319,8 @@
                       <td>
                         <div x-text="request.tokens.total"></div>
                         <template x-if="request.tokens.cached">
-                          <div x-text="`${request.tokens.cached} Cached`" class="text-muted" style="font-size: 11px;"></div>
+                          <div x-text="`${request.tokens.cached} Cached`" class="text-muted" style="font-size: 11px;">
+                          </div>
                         </template>
                       </td>
                       <td x-text="request.cost"></td>
