@@ -1075,6 +1075,9 @@
 				const rawError = request.errorMessage || request.errorCode || "";
 				const accountLabel = formatAccountLabel(request.accountId, accounts);
 				const modelLabel = formatModelLabel(request.model, request.reasoningEffort);
+				const totalTokens = formatCompactNumber(request.tokens);
+				const cachedInputTokens = toNumber(request.cachedInputTokens);
+				const cachedTokens = cachedInputTokens > 0 ? formatCompactNumber(cachedInputTokens) : null;
 				return {
 				key: `${request.requestId}-${request.timestamp}`,
 				requestId: request.requestId,
@@ -1085,8 +1088,11 @@
 					class: requestStatusClass(request.status),
 					label: requestStatusLabel(request.status),
 				},
-				tokens: formatCompactNumber(request.tokens),
-				tokensTooltip: formatTokensWithCached(request.tokens, request.cachedInputTokens),
+					tokens: {
+						total: totalTokens,
+						cached: cachedTokens,
+					},
+					tokensTooltip: formatTokensWithCached(request.tokens, request.cachedInputTokens),
 					cost: formatCurrency(request.cost),
 					error: rawError ? truncateText(rawError, 80) : "--",
 					errorTitle: rawError,

@@ -293,7 +293,12 @@
                           </template>
                         </div>
                       </td>
-                      <td x-text="request.tokens" :title="request.tokensTooltip"></td>
+                      <td>
+                        <div x-text="request.tokens.total"></div>
+                        <template x-if="request.tokens.cached">
+                          <div x-text="`${request.tokens.cached} Cached`" class="text-muted" style="font-size: 11px;"></div>
+                        </template>
+                      </td>
                       <td x-text="request.cost"></td>
                     </tr>
                   </template>
