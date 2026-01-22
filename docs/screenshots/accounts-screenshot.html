@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Codex LB - Accounts Screenshot</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;32&quot; height=&quot;32&quot; fill=&quot;none&quot; viewBox=&quot;0 0 32 32&quot;%3E%3Cpath stroke=&quot;%23000&quot; stroke-linecap=&quot;round&quot; stroke-width=&quot;2.484&quot; d=&quot;M22.356 19.797H17.17M9.662 12.29l1.979 3.576a.511.511 0 0 1-.005.504l-1.974 3.409M30.758 16c0 8.15-6.607 14.758-14.758 14.758-8.15 0-14.758-6.607-14.758-14.758C1.242 7.85 7.85 1.242 16 1.242c8.15 0 14.758 6.608 14.758 14.758Z&quot;/%3E%3C/svg%3E"
+        type="image/svg+xml">
+    <link rel="stylesheet" href="../../app/static/index.css">
+    <style>
+        /* Ensure dark theme is applied by default for screenshot */
+        :root {
+            --bg-app: #09090b;
+            --bg-panel: #18181b;
+            --bg-card: #27272a;
+            --bg-surface: #27272a;
+            --border-subtle: #3f3f46;
+            --border-strong: #52525b;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --accent-primary: #3b82f6;
+            --accent-primary-hover: #2563eb;
+            --accent-primary-text: #ffffff;
+            --status-active-bg: rgba(34, 197, 94, 0.15);
+            --status-active-text: #4ade80;
+            --status-warning-bg: rgba(234, 179, 8, 0.15);
+            --status-warning-text: #facc15;
+            --status-error-bg: rgba(239, 68, 68, 0.15);
+            --status-error-text: #f87171;
+            --status-paused-bg: rgba(59, 130, 246, 0.15);
+            --status-paused-text: #60a5fa;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+            --donut-empty: #3f3f46;
+            --bg-list-hover: rgba(255, 255, 255, 0.03);
+            --bg-list-selected: rgba(59, 130, 246, 0.15);
+            --shell-max-width: 1400px;
+        }
+
+        /* Hide x-cloak elements since Alpine.js isn't active */
+        [x-cloak] {
+            display: block !important;
+        }
+
+        /* Custom spacing to match screenshot closer */
+        .summary-list div {
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--bg-surface);
+        }
+
+        .summary-list div:last-child {
+            border-bottom: none;
+        }
+
+        .summary-list span {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .summary-list strong {
+            font-family: inherit;
+        }
+
+        /* Token fieldset overrides */
+        .token-fieldset {
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 24px;
+        }
+
+        .token-fieldset legend {
+            padding: 0 4px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body class="has-scrollbar" data-theme="dark">
+    <div class="app-shell">
+        <header class="main-header">
+            <div class="header-content">
+                <h1 class="app-logo">Codex Load Balancer</h1>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" onclick="toggleTheme()">
+                        <!-- Sun icon (shown in dark mode) -->
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4" />
+                            <path d="M12 2v2" />
+                            <path d="M12 20v2" />
+                            <path d="m4.93 4.93 1.41 1.41" />
+                            <path d="m17.66 17.66 1.41 1.41" />
+                            <path d="M2 12h2" />
+                            <path d="M20 12h2" />
+                            <path d="m6.34 17.66-1.41 1.41" />
+                            <path d="m19.07 4.93-1.41 1.41" />
+                        </svg>
+                        <!-- Moon icon (shown in light mode) -->
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <script>
+            function toggleTheme() {
+                const body = document.body;
+                const sunIcon = document.getElementById('sun-icon');
+                const moonIcon = document.getElementById('moon-icon');
+
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.setAttribute('data-theme', 'light');
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                }
+            }
+        </script>
+        <main class="main-content">
+            <section class="tabs" aria-label="Codex FE tabs">
+                <menu role="tablist" aria-label="Codex FE tabs">
+                    <button role="tab" type="button" aria-controls="tab-dashboard" aria-selected="false" tabindex="-1">
+                        <span>Dashboard</span>
+                    </button>
+                    <button role="tab" type="button" aria-controls="tab-accounts" aria-selected="true" tabindex="0">
+                        <span>Accounts</span>
+                    </button>
+                    <button role="tab" type="button" aria-controls="tab-settings" aria-selected="false" tabindex="-1">
+                        <span>Settings</span>
+                    </button>
+                </menu>
+
+                <article role="tabpanel" id="tab-accounts">
+                    <div class="two-column">
+                        <!-- Left Panel: Account List -->
+                        <div class="panel account-list-panel">
+                            <h3>Account list</h3>
+                            <div class="list-actions">
+                                <div class="searchbox">
+                                    <input type="search" placeholder="Search accounts" aria-label="Search accounts">
+                                    <button type="button" aria-label="search" title="Search accounts">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <label role="button">
+                                    Import auth.json
+                                </label>
+                                <button type="button">Add account</button>
+                            </div>
+                            <div class="table-wrap table-wrap--column-lines has-scrollbar">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th class="highlighted indicator" style="width: 25%">Account ID</th>
+                                            <th style="width: 25%">Email</th>
+                                            <th style="width: 10%">Plan</th>
+                                            <th style="width: 12%">Status</th>
+                                            <th style="text-align: center; width: 14%">
+                                                <span
+                                                    style="display: inline-flex; flex-direction: column; align-items: center">
+                                                    <span>Remaining</span>
+                                                    <span
+                                                        style="font-weight: normal; font-size: 0.9em; color: var(--text-muted)">(7d)</span>
+                                                </span>
+                                            </th>
+                                            <th style="text-align: center; width: 14%">
+                                                <span
+                                                    style="display: inline-flex; flex-direction: column; align-items: center">
+                                                    <span style="white-space: nowrap">Quota reset</span>
+                                                    <span
+                                                        style="font-weight: normal; font-size: 0.9em; color: var(--text-muted)">(7d)</span>
+                                                </span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Row 1: Active, Selected -->
+                                        <tr class="highlighted" style="cursor: pointer">
+                                            <td class="cell-truncate" title="acc_a1b2c3d4e5f6g7h8">
+                                                acc_a1b2c3d4e5f6g7h8</td>
+                                            <td class="cell-truncate" title="user.alice@example.com">
+                                                user.alice@example.com</td>
+                                            <td>Team</td>
+                                            <td><span class="status-pill active">Active</span></td>
+                                            <td style="text-align: center" class="text-success">71%</td>
+                                            <td style="text-align: center">in 4d</td>
+                                        </tr>
+                                        <!-- Row 2: Paused -->
+                                        <tr style="cursor: pointer">
+                                            <td class="cell-truncate" title="acc_1234567890abcdef">
+                                                acc_1234567890abcdef</td>
+                                            <td class="cell-truncate" title="user.bob@example.com">
+                                                user.bob@example.com</td>
+                                            <td>Team</td>
+                                            <td><span class="status-pill paused">Paused</span></td>
+                                            <td style="text-align: center" class="text-success">91%</td>
+                                            <td style="text-align: center">in 7d</td>
+                                        </tr>
+                                        <!-- Row 3: Rate Limited -->
+                                        <tr style="cursor: pointer">
+                                            <td class="cell-truncate" title="acc_fedcba0987654321">
+                                                acc_fedcba0987654321</td>
+                                            <td class="cell-truncate" title="charlie.123@test-corp.net">
+                                                charlie.123@test-corp.net</td>
+                                            <td>Team</td>
+                                            <td><span class="status-pill limited">Rate limited</span></td>
+                                            <td style="text-align: center" class="text-limited">44%</td>
+                                            <td style="text-align: center">in 23h</td>
+                                        </tr>
+                                        <!-- Row 4: Active -->
+                                        <tr style="cursor: pointer">
+                                            <td class="cell-truncate" title="acc_x1y2z3a4b5c6d7e8">
+                                                acc_x1y2z3a4b5c6d7e8</td>
+                                            <td class="cell-truncate" title="dave_plus_account@service.org">
+                                                dave_plus_account@service.org</td>
+                                            <td>Plus</td>
+                                            <td><span class="status-pill active">Active</span></td>
+                                            <td style="text-align: center" class="text-success">92%</td>
+                                            <td style="text-align: center">in 7d</td>
+                                        </tr>
+                                        <!-- Row 5: Active -->
+                                        <tr style="cursor: pointer">
+                                            <td class="cell-truncate" title="acc_9876543210abcdef">
+                                                acc_9876543210abcdef</td>
+                                            <td class="cell-truncate" title="eve.monitor@status-check.io">
+                                                eve.monitor@status-check.io</td>
+                                            <td>Team</td>
+                                            <td><span class="status-pill active">Active</span></td>
+                                            <td style="text-align: center" class="text-success">90%</td>
+                                            <td style="text-align: center">in 6d</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Selected Account -->
+                        <div class="panel">
+                            <h3>Selected account</h3>
+                            <div class="summary-list">
+                                <div>
+                                    <span>Email</span>
+                                    <strong class="cell-truncate" style="max-width: 200px;"
+                                        title="user.alice@example.com">user.alice@example.com</strong>
+                                </div>
+                                <div>
+                                    <span>Account ID</span>
+                                    <strong class="cell-truncate" style="max-width: 200px;"
+                                        title="acc_a1b2c3d4e5f6g7h8">acc_a1b2c3d4e5f6g7h8</strong>
+                                </div>
+                                <div>
+                                    <span>Plan</span>
+                                    <strong>Team</strong>
+                                </div>
+                                <div>
+                                    <span>Status</span>
+                                    <span class="status-pill active">Active</span>
+                                </div>
+                                <div>
+                                    <span>Quota reset (5h)</span>
+                                    <strong>in 4h</strong>
+                                </div>
+                                <div>
+                                    <span>Quota reset (7d)</span>
+                                    <strong>in 4d</strong>
+                                </div>
+                            </div>
+
+                            <div class="split-stack" style="margin-top: 24px">
+                                <div class="progress-row">
+                                    <label>Remaining (5h)</label>
+                                    <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="success"
+                                        aria-valuenow="100">
+                                        <div style="width: 100%"></div>
+                                    </div>
+                                    <span class="text-success" style="font-weight: 500; font-size: 16px;">100%</span>
+                                </div>
+                                <div class="progress-row" style="margin-top: 24px;">
+                                    <label>Remaining (7d)</label>
+                                    <div role="progressbar" aria-valuemin="0" aria-valuemax="100" class="success"
+                                        aria-valuenow="71">
+                                        <div style="width: 71%"></div>
+                                    </div>
+                                    <span class="text-success" style="font-weight: 500; font-size: 16px;">71%</span>
+                                </div>
+                            </div>
+
+                            <fieldset class="token-fieldset">
+                                <legend>Tokens</legend>
+                                <div class="summary-list" style="border: none;">
+                                    <div style="border-bottom: 1px solid var(--bg-surface);">
+                                        <span>Access token</span>
+                                        <span style="color: var(--text-main);">Valid (in 8d)</span>
+                                    </div>
+                                    <div style="border-bottom: 1px solid var(--bg-surface);">
+                                        <span>Refresh token</span>
+                                        <span style="color: var(--text-main);">Stored</span>
+                                    </div>
+                                    <div style="border-bottom: none;">
+                                        <span>Id token</span>
+                                        <span style="color: var(--text-main);">Parsed</span>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <div class="inline-actions" style="margin-top: 24px">
+                                <button>Pause</button>
+                                <button>Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

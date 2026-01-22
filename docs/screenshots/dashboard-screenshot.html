@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Codex LB - Dashboard Screenshot</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;32&quot; height=&quot;32&quot; fill=&quot;none&quot; viewBox=&quot;0 0 32 32&quot;%3E%3Cpath stroke=&quot;%23000&quot; stroke-linecap=&quot;round&quot; stroke-width=&quot;2.484&quot; d=&quot;M22.356 19.797H17.17M9.662 12.29l1.979 3.576a.511.511 0 0 1-.005.504l-1.974 3.409M30.758 16c0 8.15-6.607 14.758-14.758 14.758-8.15 0-14.758-6.607-14.758-14.758C1.242 7.85 7.85 1.242 16 1.242c8.15 0 14.758 6.608 14.758 14.758Z&quot;/%3E%3C/svg%3E"
+        type="image/svg+xml">
+    <link rel="stylesheet" href="../../app/static/index.css">
+    <style>
+        /* Ensure dark theme is applied by default for screenshot */
+        :root {
+            --bg-app: #09090b;
+            --bg-panel: #18181b;
+            --bg-card: #27272a;
+            --bg-surface: #27272a;
+            --border-subtle: #3f3f46;
+            --border-strong: #52525b;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --accent-primary: #3b82f6;
+            --accent-primary-hover: #2563eb;
+            --accent-primary-text: #ffffff;
+            --status-active-bg: rgba(34, 197, 94, 0.15);
+            --status-active-text: #4ade80;
+            --status-warning-bg: rgba(234, 179, 8, 0.15);
+            --status-warning-text: #facc15;
+            --status-error-bg: rgba(239, 68, 68, 0.15);
+            --status-error-text: #f87171;
+            --status-paused-bg: rgba(59, 130, 246, 0.15);
+            --status-paused-text: #60a5fa;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+            --donut-empty: #3f3f46;
+            --bg-list-hover: rgba(255, 255, 255, 0.03);
+            --bg-list-selected: rgba(59, 130, 246, 0.15);
+            --shell-max-width: 1400px;
+        }
+
+        /* Hide x-cloak elements since Alpine.js isn't active */
+        [x-cloak] {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body class="has-scrollbar" data-theme="dark">
+    <div class="app-shell">
+        <header class="main-header">
+            <div class="header-content">
+                <h1 class="app-logo">Codex Load Balancer</h1>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" onclick="toggleTheme()">
+                        <!-- Sun icon (shown in dark mode) -->
+                        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="4" />
+                            <path d="M12 2v2" />
+                            <path d="M12 20v2" />
+                            <path d="m4.93 4.93 1.41 1.41" />
+                            <path d="m17.66 17.66 1.41 1.41" />
+                            <path d="M2 12h2" />
+                            <path d="M20 12h2" />
+                            <path d="m6.34 17.66-1.41 1.41" />
+                            <path d="m19.07 4.93-1.41 1.41" />
+                        </svg>
+                        <!-- Moon icon (shown in light mode) -->
+                        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <script>
+            function toggleTheme() {
+                const body = document.body;
+                const sunIcon = document.getElementById('sun-icon');
+                const moonIcon = document.getElementById('moon-icon');
+
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.setAttribute('data-theme', 'light');
+                    sunIcon.style.display = 'none';
+                    moonIcon.style.display = 'block';
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    sunIcon.style.display = 'block';
+                    moonIcon.style.display = 'none';
+                }
+            }
+        </script>
+        <main class="main-content">
+            <section class="tabs" aria-label="Codex FE tabs">
+                <menu role="tablist" aria-label="Codex FE tabs">
+                    <button role="tab" type="button" aria-controls="tab-dashboard" aria-selected="true" tabindex="0">
+                        <span>Dashboard</span>
+                    </button>
+                    <button role="tab" type="button" aria-controls="tab-accounts" aria-selected="false" tabindex="-1">
+                        <span>Accounts</span>
+                    </button>
+                    <button role="tab" type="button" aria-controls="tab-settings" aria-selected="false" tabindex="-1">
+                        <span>Settings</span>
+                    </button>
+                </menu>
+
+                <article role="tabpanel" id="tab-dashboard">
+                    <div class="hero-banner">
+                        <h2>Quota remaining and routing health</h2>
+                        <p>Live summary of remaining quota for Codex traffic routed through the ChatGPT-style backend.
+                            Account status and load balancing signals are surfaced here.</p>
+                        <div class="badge-row">
+                            <span class="status-pill active">2 Active</span>
+                            <span class="status-pill limited">1 Rate limited</span>
+                            <span class="status-pill paused">1 Paused</span>
+                        </div>
+                    </div>
+
+                    <div class="section-grid" style="margin-top: 12px">
+                        <div class="panel">
+                            <h3>Tokens (7d)</h3>
+                            <div class="stat-value">24.5K</div>
+                            <div class="stat-meta">12% cached</div>
+                        </div>
+                        <div class="panel">
+                            <h3>Cost (7d)</h3>
+                            <div class="stat-value">$12.47</div>
+                            <div class="stat-meta">Avg per hour: $0.07</div>
+                        </div>
+                        <div class="panel">
+                            <h3>Active accounts</h3>
+                            <div class="stat-value">2 / 4</div>
+                            <div class="stat-meta">Rotation: usage weighted</div>
+                        </div>
+                        <div class="panel">
+                            <h3>Error rate (7d)</h3>
+                            <div class="stat-value">2.3%</div>
+                            <div class="stat-meta">Top error: rate_limit</div>
+                        </div>
+                    </div>
+
+                    <div class="two-column two-column--equal" style="margin-top: 12px">
+                        <!-- Primary Quota Donut -->
+                        <div class="panel">
+                            <h3>REMAINING QUOTA BY ACCOUNT (5H)</h3>
+                            <div class="donut-wrap">
+                                <div class="donut"
+                                    style="--donut-data: conic-gradient(#7bb661 0deg 90deg, #d9a441 90deg 162deg, #4b6ea8 162deg 198deg, #3f3f46 198deg 360deg);">
+                                    <div class="donut-center">
+                                        <strong>5h</strong>
+                                        <div>15K/25K</div>
+                                    </div>
+                                </div>
+                                <ul class="legend">
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #7bb661;"></i>
+                                            <span class="legend-label-text"
+                                                title="alice@example.com">alice@example.com</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label">Remaining</span>
+                                            <span class="legend-detail-value success">70%</span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #d9a441;"></i>
+                                            <span class="legend-label-text"
+                                                title="bob@example.com">bob@example.com</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label">Remaining</span>
+                                            <span class="legend-detail-value limited">45%</span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #4b6ea8;"></i>
+                                            <span class="legend-label-text"
+                                                title="charlie@example.com">charlie@example.com</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label">Remaining</span>
+                                            <span class="legend-detail-value error">15%</span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #3f3f46;"></i>
+                                            <span class="legend-label-text">Consumed</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label"></span>
+                                            <span class="legend-detail-value success">45%</span>
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Secondary Quota Donut -->
+                        <div class="panel">
+                            <h3>REMAINING QUOTA BY ACCOUNT (7D)</h3>
+                            <div class="donut-wrap">
+                                <div class="donut"
+                                    style="--donut-data: conic-gradient(#7bb661 0deg 126deg, #d9a441 126deg 216deg, #4b6ea8 216deg 252deg, #3f3f46 252deg 360deg);">
+                                    <div class="donut-center">
+                                        <strong>7d</strong>
+                                        <div>8.2K/12K</div>
+                                    </div>
+                                </div>
+                                <ul class="legend">
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #7bb661;"></i>
+                                            <span class="legend-label-text"
+                                                title="alice@example.com">alice@example.com</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label">Remaining</span>
+                                            <span class="legend-detail-value success">70%</span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #d9a441;"></i>
+                                            <span class="legend-label-text"
+                                                title="bob@example.com">bob@example.com</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label">Remaining</span>
+                                            <span class="legend-detail-value success">80%</span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #4b6ea8;"></i>
+                                            <span class="legend-label-text"
+                                                title="charlie@example.com">charlie@example.com</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label">Remaining</span>
+                                            <span class="legend-detail-value error">15%</span>
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="legend-label">
+                                            <i style="--legend-color: #3f3f46;"></i>
+                                            <span class="legend-label-text">Consumed</span>
+                                        </span>
+                                        <span class="legend-detail">
+                                            <span class="legend-detail-label"></span>
+                                            <span class="legend-detail-value success">30%</span>
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <section style="margin-top: 12px">
+                        <h3>Account status</h3>
+                        <div class="account-grid">
+                            <!-- Account Card 1 - Active -->
+                            <div class="account-card">
+                                <header>
+                                    <div>
+                                        <div title="alice@example.com (Plus)">alice@example.com (Plus)</div>
+                                        <div class="account-id">acc_1a2b3c4d5e6f7g8h</div>
+                                    </div>
+                                    <span class="status-pill active">Active</span>
+                                </header>
+                                <div class="progress-row">
+                                    <label>Remaining (7d)</label>
+                                    <div role="progressbar" class="success" aria-valuemin="0" aria-valuemax="100"
+                                        aria-valuenow="70">
+                                        <div style="width: 70%"></div>
+                                    </div>
+                                    <span class="text-muted">70%</span>
+                                </div>
+                                <div class="text-muted">Quota reset (7d) · in 4d</div>
+                                <div class="account-actions">
+                                    <button>Details</button>
+                                </div>
+                            </div>
+
+                            <!-- Account Card 2 - Active -->
+                            <div class="account-card">
+                                <header>
+                                    <div>
+                                        <div title="bob@example.com (Pro)">bob@example.com (Pro)</div>
+                                        <div class="account-id">acc_9i8h7g6f5e4d3c2b</div>
+                                    </div>
+                                    <span class="status-pill active">Active</span>
+                                </header>
+                                <div class="progress-row">
+                                    <label>Remaining (7d)</label>
+                                    <div role="progressbar" class="success" aria-valuemin="0" aria-valuemax="100"
+                                        aria-valuenow="80">
+                                        <div style="width: 80%"></div>
+                                    </div>
+                                    <span class="text-muted">80%</span>
+                                </div>
+                                <div class="text-muted">Quota reset (7d) · in 7d</div>
+                                <div class="account-actions">
+                                    <button>Details</button>
+                                </div>
+                            </div>
+
+                            <!-- Account Card 3 - Rate Limited -->
+                            <div class="account-card">
+                                <header>
+                                    <div>
+                                        <div title="charlie@example.com (Plus)">charlie@example.com (Plus)</div>
+                                        <div class="account-id">acc_x1y2z3a4b5c6d7e8</div>
+                                    </div>
+                                    <span class="status-pill limited">Rate limited</span>
+                                </header>
+                                <div class="progress-row">
+                                    <label>Remaining (7d)</label>
+                                    <div role="progressbar" class="error" aria-valuemin="0" aria-valuemax="100"
+                                        aria-valuenow="15">
+                                        <div style="width: 15%"></div>
+                                    </div>
+                                    <span class="text-muted">15%</span>
+                                </div>
+                                <div class="text-muted">Quota reset (7d) · in 47 minutes</div>
+                                <div class="account-actions">
+                                    <button>Details</button>
+                                </div>
+                            </div>
+
+                            <!-- Account Card 4 - Paused -->
+                            <div class="account-card">
+                                <header>
+                                    <div>
+                                        <div title="eve@example.com (Plus)">eve@example.com (Plus)</div>
+                                        <div class="account-id">acc_u1v2w3x4y5z6a7b8</div>
+                                    </div>
+                                    <span class="status-pill paused">Paused</span>
+                                </header>
+                                <div class="progress-row">
+                                    <label>Remaining (7d)</label>
+                                    <div role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+                                        <div style="width: 50%"></div>
+                                    </div>
+                                    <span class="text-muted">50%</span>
+                                </div>
+                                <div class="text-muted">Quota reset (7d) · in 1d</div>
+                                <div class="account-actions">
+                                    <button>Details</button>
+                                    <button>Resume</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="panel" style="margin-top: 12px">
+                        <h3>Recent requests</h3>
+                        <div class="table-wrap table-wrap--requests table-wrap--column-lines has-scrollbar">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="highlighted indicator" style="width: 15%">Time</th>
+                                        <th style="width: 25%">Account</th>
+                                        <th style="width: 15%">Model</th>
+                                        <th style="width: 10%">Status</th>
+                                        <th style="width: 15%">Error</th>
+                                        <th style="text-align: right; width: 10%">Tokens</th>
+                                        <th style="text-align: right; width: 10%">Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>11:14:02</td>
+                                        <td class="cell-truncate" title="alice@example.com">alice@example.com</td>
+                                        <td class="cell-truncate" title="gpt-5.2 (high)">gpt-5.2 (high)</td>
+                                        <td><span class="status-pill ok">OK</span></td>
+                                        <td class="cell-truncate">--</td>
+                                        <td style="text-align: right">2,847</td>
+                                        <td style="text-align: right">$0.42</td>
+                                    </tr>
+                                    <tr>
+                                        <td>11:13:48</td>
+                                        <td class="cell-truncate" title="bob@example.com">bob@example.com</td>
+                                        <td class="cell-truncate" title="gpt-5.2 (high)">gpt-5.2 (high)</td>
+                                        <td><span class="status-pill ok">OK</span></td>
+                                        <td class="cell-truncate">--</td>
+                                        <td style="text-align: right">1,234</td>
+                                        <td style="text-align: right">$0.18</td>
+                                    </tr>
+                                    <tr>
+                                        <td>11:13:22</td>
+                                        <td class="cell-truncate" title="charlie@example.com">charlie@example.com</td>
+                                        <td class="cell-truncate" title="gpt-5.2 (high)">gpt-5.2 (high)</td>
+                                        <td><span class="status-pill rate_limit">Rate limit</span></td>
+                                        <td class="cell-truncate" title="Rate limit exceeded for model">Rate limit
+                                            exceeded</td>
+                                        <td style="text-align: right">--</td>
+                                        <td style="text-align: right">--</td>
+                                    </tr>
+                                    <tr>
+                                        <td>11:12:55</td>
+                                        <td class="cell-truncate" title="alice@example.com">alice@example.com</td>
+                                        <td class="cell-truncate" title="gpt-5.2 (high)">gpt-5.2 (high)</td>
+                                        <td><span class="status-pill ok">OK</span></td>
+                                        <td class="cell-truncate">--</td>
+                                        <td style="text-align: right">956</td>
+                                        <td style="text-align: right">$0.09</td>
+                                    </tr>
+                                    <tr>
+                                        <td>11:12:31</td>
+                                        <td class="cell-truncate" title="bob@example.com">bob@example.com</td>
+                                        <td class="cell-truncate" title="gpt-5.2 (high)">gpt-5.2 (high)</td>
+                                        <td><span class="status-pill ok">OK</span></td>
+                                        <td class="cell-truncate">--</td>
+                                        <td style="text-align: right">3,102</td>
+                                        <td style="text-align: right">$0.46</td>
+                                    </tr>
+                                    <tr>
+                                        <td>11:11:58</td>
+                                        <td class="cell-truncate" title="alice@example.com">alice@example.com</td>
+                                        <td class="cell-truncate" title="gpt-5.2 (high)">gpt-5.2 (high)</td>
+                                        <td><span class="status-pill ok">OK</span></td>
+                                        <td class="cell-truncate">--</td>
+                                        <td style="text-align: right">1,789</td>
+                                        <td style="text-align: right">$0.27</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </main>
+        <div class="status-bar">
+            <p class="status-bar-field">Connected</p>
+            <p class="status-bar-field">Last sync: 11:14:19</p>
+            <p class="status-bar-field">4 accounts</p>
+        </div>
+    </div>
+</body>
+
+</html>
