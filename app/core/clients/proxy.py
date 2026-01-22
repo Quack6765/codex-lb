@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from typing import AsyncIterator, Mapping
 
 import aiohttp
@@ -116,19 +117,27 @@ async def _error_event_from_response(resp: aiohttp.ClientResponse) -> ResponseFa
 
 
 async def _error_payload_from_response(resp: aiohttp.ClientResponse) -> OpenAIErrorEnvelope:
-    fallback_message = f"Upstream error: HTTP {resp.status}"
+    start_message = f"Upstream error: HTTP {resp.status}"
     try:
         data = await resp.json(content_type=None)
     except Exception:
         text = await resp.text()
-        message = text.strip() or fallback_message
+        message = text.strip() or start_message
         return openai_error("upstream_error", message)
 
     if isinstance(data, dict):
         error = parse_error_payload(data)
         if error:
             return {"error": error.model_dump(exclude_none=True)}
-    return openai_error("upstream_error", fallback_message)
+        # If we can't parse as OpenAI error, return the raw data as message if small enough
+        try:
+            raw_str = json.dumps(data)
+            if len(raw_str) < 500:
+                return openai_error("upstream_error", f"{start_message} - {raw_str}")
+        except Exception:
+            pass
+            
+    return openai_error("upstream_error", start_message)
 
 
 async def stream_responses(

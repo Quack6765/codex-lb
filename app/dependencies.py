@@ -11,6 +11,7 @@ from app.db.session import SessionLocal, _safe_close, _safe_rollback, get_sessio
 from app.modules.accounts.repository import AccountsRepository
 from app.modules.accounts.service import AccountsService
 from app.modules.oauth.service import OauthService
+from app.modules.proxy.chat_completions_service import ChatCompletionsService
 from app.modules.proxy.service import ProxyService
 from app.modules.proxy.sticky_repository import StickySessionsRepository
 from app.modules.request_logs.repository import RequestLogsRepository
@@ -43,6 +44,18 @@ class OauthContext:
 @dataclass(slots=True)
 class ProxyContext:
     service: ProxyService
+
+    async def rate_limit_headers(self) -> dict[str, str]:
+        return await self.service.rate_limit_headers()
+
+
+@dataclass(slots=True)
+class ChatCompletionsContext:
+    service: ChatCompletionsService
+    _proxy_service: ProxyService
+
+    async def rate_limit_headers(self) -> dict[str, str]:
+        return await self._proxy_service.rate_limit_headers()
 
 
 @dataclass(slots=True)
@@ -126,6 +139,31 @@ def get_proxy_context(
     return ProxyContext(service=service)
 
 
+def get_chat_completions_context(
+    session: AsyncSession = Depends(get_session),
+) -> ChatCompletionsContext:
+    accounts_repository = AccountsRepository(session)
+    usage_repository = UsageRepository(session)
+    request_logs_repository = RequestLogsRepository(session)
+    sticky_repository = StickySessionsRepository(session)
+    settings_repository = SettingsRepository(session)
+    chat_service = ChatCompletionsService(
+        accounts_repository,
+        usage_repository,
+        request_logs_repository,
+        sticky_repository,
+        settings_repository,
+    )
+    proxy_service = ProxyService(
+        accounts_repository,
+        usage_repository,
+        request_logs_repository,
+        sticky_repository,
+        settings_repository,
+    )
+    return ChatCompletionsContext(service=chat_service, _proxy_service=proxy_service)
+
+
 def get_request_logs_context(
     session: AsyncSession = Depends(get_session),
 ) -> RequestLogsContext:
@@ -140,3 +178,4 @@ def get_settings_context(
     repository = SettingsRepository(session)
     service = SettingsService(repository)
     return SettingsContext(session=session, repository=repository, service=service)
+

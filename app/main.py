@@ -23,6 +23,7 @@ from app.modules.accounts import api as accounts_api
 from app.modules.health import api as health_api
 from app.modules.oauth import api as oauth_api
 from app.modules.proxy import api as proxy_api
+from app.modules.proxy import chat_completions_api
 from app.modules.request_logs import api as request_logs_api
 from app.modules.settings import api as settings_api
 from app.modules.usage import api as usage_api
@@ -81,6 +82,21 @@ def create_app() -> FastAPI:
         request: Request,
         exc: RequestValidationError,
     ) -> Response:
+        if request.url.path.startswith("/v1/chat"):
+            logger.error(
+                "Chat completion validation error: %s",
+                exc.errors(),
+            )
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "error": {
+                        "message": str(exc.errors()),
+                        "type": "invalid_request_error",
+                        "code": "validation_error",
+                    }
+                },
+            )
         if request.url.path.startswith("/api/"):
             return JSONResponse(
                 status_code=422,
@@ -103,6 +119,7 @@ def create_app() -> FastAPI:
 
     app.include_router(proxy_api.router)
     app.include_router(proxy_api.usage_router)
+    app.include_router(chat_completions_api.router)
     app.include_router(accounts_api.router)
     app.include_router(usage_api.router)
     app.include_router(request_logs_api.router)
