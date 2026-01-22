@@ -192,17 +192,19 @@
                       x-text="multiSelectSummary(filtersDraft.accountIds, 'All accounts', 'account', 'accounts')"></span>
                   </button>
                   <div class="multi-select-menu" x-show="open" x-transition.opacity>
-                    <div class="multi-select-actions">
-                      <button type="button" class="multi-select-action"
-                        @click="filtersDraft.accountIds = []; open = false">Clear</button>
+                    <div class="multi-select-scroller">
+                      <div class="multi-select-actions">
+                        <button type="button" class="multi-select-action"
+                          @click="filtersDraft.accountIds = []; open = false">Clear</button>
+                      </div>
+                      <template x-for="accountId in requestLogOptions.accountIds" :key="accountId">
+                        <label class="multi-select-item">
+                          <input type="checkbox" :checked="filtersDraft.accountIds.includes(accountId)"
+                            @change="toggleMultiSelectValue('accountIds', accountId)">
+                          <span class="multi-select-label" x-text="accountFilterLabel(accountId)"></span>
+                        </label>
+                      </template>
                     </div>
-                    <template x-for="accountId in requestLogOptions.accountIds" :key="accountId">
-                      <label class="multi-select-item">
-                        <input type="checkbox" :checked="filtersDraft.accountIds.includes(accountId)"
-                          @change="toggleMultiSelectValue('accountIds', accountId)">
-                        <span class="multi-select-label" x-text="accountFilterLabel(accountId)"></span>
-                      </label>
-                    </template>
                   </div>
                 </div>
 
@@ -213,19 +215,21 @@
                       x-text="multiSelectSummary(filtersDraft.modelOptions, 'All models', 'model', 'models')"></span>
                   </button>
                   <div class="multi-select-menu" x-show="open" x-transition.opacity>
-                    <div class="multi-select-actions">
-                      <button type="button" class="multi-select-action"
-                        @click="filtersDraft.modelOptions = []; open = false">Clear</button>
+                    <div class="multi-select-scroller">
+                      <div class="multi-select-actions">
+                        <button type="button" class="multi-select-action"
+                          @click="filtersDraft.modelOptions = []; open = false">Clear</button>
+                      </div>
+                      <template x-for="modelOption in requestLogOptions.modelOptions"
+                        :key="modelOptionValue(modelOption)">
+                        <label class="multi-select-item">
+                          <input type="checkbox"
+                            :checked="filtersDraft.modelOptions.includes(modelOptionValue(modelOption))"
+                            @change="toggleMultiSelectValue('modelOptions', modelOptionValue(modelOption))">
+                          <span class="multi-select-label" x-text="modelOptionLabel(modelOption)"></span>
+                        </label>
+                      </template>
                     </div>
-                    <template x-for="modelOption in requestLogOptions.modelOptions"
-                      :key="modelOptionValue(modelOption)">
-                      <label class="multi-select-item">
-                        <input type="checkbox"
-                          :checked="filtersDraft.modelOptions.includes(modelOptionValue(modelOption))"
-                          @change="toggleMultiSelectValue('modelOptions', modelOptionValue(modelOption))">
-                        <span class="multi-select-label" x-text="modelOptionLabel(modelOption)"></span>
-                      </label>
-                    </template>
                   </div>
                 </div>
 
@@ -235,30 +239,32 @@
                     <span x-text="multiSelectSummary(filtersDraft.statuses, 'All status', 'status', 'statuses')"></span>
                   </button>
                   <div class="multi-select-menu" x-show="open" x-transition.opacity>
-                    <div class="multi-select-actions">
-                      <button type="button" class="multi-select-action"
-                        @click="filtersDraft.statuses = []; open = false">Clear</button>
+                    <div class="multi-select-scroller">
+                      <div class="multi-select-actions">
+                        <button type="button" class="multi-select-action"
+                          @click="filtersDraft.statuses = []; open = false">Clear</button>
+                      </div>
+                      <label class="multi-select-item">
+                        <input type="checkbox" :checked="filtersDraft.statuses.includes('ok')"
+                          @change="toggleMultiSelectValue('statuses', 'ok')">
+                        <span class="multi-select-label">OK</span>
+                      </label>
+                      <label class="multi-select-item">
+                        <input type="checkbox" :checked="filtersDraft.statuses.includes('rate_limit')"
+                          @change="toggleMultiSelectValue('statuses', 'rate_limit')">
+                        <span class="multi-select-label">Rate Limit</span>
+                      </label>
+                      <label class="multi-select-item">
+                        <input type="checkbox" :checked="filtersDraft.statuses.includes('quota')"
+                          @change="toggleMultiSelectValue('statuses', 'quota')">
+                        <span class="multi-select-label">Quota</span>
+                      </label>
+                      <label class="multi-select-item">
+                        <input type="checkbox" :checked="filtersDraft.statuses.includes('error')"
+                          @change="toggleMultiSelectValue('statuses', 'error')">
+                        <span class="multi-select-label">Error</span>
+                      </label>
                     </div>
-                    <label class="multi-select-item">
-                      <input type="checkbox" :checked="filtersDraft.statuses.includes('ok')"
-                        @change="toggleMultiSelectValue('statuses', 'ok')">
-                      <span class="multi-select-label">OK</span>
-                    </label>
-                    <label class="multi-select-item">
-                      <input type="checkbox" :checked="filtersDraft.statuses.includes('rate_limit')"
-                        @change="toggleMultiSelectValue('statuses', 'rate_limit')">
-                      <span class="multi-select-label">Rate Limit</span>
-                    </label>
-                    <label class="multi-select-item">
-                      <input type="checkbox" :checked="filtersDraft.statuses.includes('quota')"
-                        @change="toggleMultiSelectValue('statuses', 'quota')">
-                      <span class="multi-select-label">Quota</span>
-                    </label>
-                    <label class="multi-select-item">
-                      <input type="checkbox" :checked="filtersDraft.statuses.includes('error')"
-                        @change="toggleMultiSelectValue('statuses', 'error')">
-                      <span class="multi-select-label">Error</span>
-                    </label>
                   </div>
                 </div>
 
@@ -271,12 +277,30 @@
 
               <div class="controls-group">
                 <span style="font-size: 13px; color: var(--text-muted);">Show:</span>
-                <select class="filter-select" x-model="pagination.limit">
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-                  <option value="250">250</option>
-                </select>
+                <div class="single-select" x-data="{ open: false }" @click.outside="open = false">
+                  <button type="button" class="filter-select single-select-trigger" @click="open = !open"
+                    :aria-expanded="open" style="min-width: 60px">
+                    <span x-text="pagination.limit"></span>
+                  </button>
+                  <div class="single-select-menu" x-show="open" x-transition.opacity style="min-width: 80px">
+                    <label class="single-select-item" :class="{ 'is-selected': pagination.limit == 25 }">
+                      <input type="radio" name="limit" value="25" x-model="pagination.limit" @change="open = false">
+                      <span>25</span>
+                    </label>
+                    <label class="single-select-item" :class="{ 'is-selected': pagination.limit == 50 }">
+                      <input type="radio" name="limit" value="50" x-model="pagination.limit" @change="open = false">
+                      <span>50</span>
+                    </label>
+                    <label class="single-select-item" :class="{ 'is-selected': pagination.limit == 100 }">
+                      <input type="radio" name="limit" value="100" x-model="pagination.limit" @change="open = false">
+                      <span>100</span>
+                    </label>
+                    <label class="single-select-item" :class="{ 'is-selected': pagination.limit == 250 }">
+                      <input type="radio" name="limit" value="250" x-model="pagination.limit" @change="open = false">
+                      <span>250</span>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 

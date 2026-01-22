@@ -797,14 +797,22 @@ body[data-theme="light"] {
   width: max-content;
   min-width: 220px;
   max-width: 360px;
-  max-height: 280px;
-  overflow: auto;
   padding: 8px;
   padding-top: 12px;
   border-radius: 10px;
   border: 1px solid var(--border-subtle);
   background: var(--bg-panel);
   box-shadow: var(--shadow-md);
+  overflow: visible;
+}
+
+.multi-select-scroller {
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Add padding to ensure scrollbar doesn't overlap content tightly if needed, 
+     but we removed padding from parent. Wait, parent has padding 8px. 
+     The scroller is inside. */
 }
 
 .multi-select-menu::before {
