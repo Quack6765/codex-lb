@@ -149,7 +149,7 @@ class StubAccountsRepository:
 
 
 @pytest.mark.asyncio
-async def test_usage_updater_deactivates_on_4xx_error(monkeypatch) -> None:
+async def test_usage_updater_deactivates_on_account_invalid_4xx(monkeypatch) -> None:
     monkeypatch.setenv("CODEX_LB_USAGE_REFRESH_ENABLED", "true")
     from app.core.clients.usage import UsageFetchError
     from app.core.config.settings import get_settings
@@ -175,6 +175,30 @@ async def test_usage_updater_deactivates_on_4xx_error(monkeypatch) -> None:
     assert update["status"] == AccountStatus.DEACTIVATED
     assert "402" in update["deactivation_reason"]
     assert "Payment Required" in update["deactivation_reason"]
+
+
+@pytest.mark.asyncio
+async def test_usage_updater_does_not_deactivate_on_transient_4xx(monkeypatch) -> None:
+    monkeypatch.setenv("CODEX_LB_USAGE_REFRESH_ENABLED", "true")
+    from app.core.clients.usage import UsageFetchError
+    from app.core.config.settings import get_settings
+
+    get_settings.cache_clear()
+
+    async def stub_fetch_usage_429(**_: Any) -> UsagePayload:
+        raise UsageFetchError(429, "Too Many Requests")
+
+    monkeypatch.setattr("app.modules.usage.updater.fetch_usage", stub_fetch_usage_429)
+
+    usage_repo = StubUsageRepository()
+    accounts_repo = StubAccountsRepository()
+    updater = UsageUpdater(usage_repo, accounts_repo=accounts_repo)
+
+    acc = _make_account("acc_429", "workspace_429", email="rate@example.com")
+
+    await updater.refresh_accounts([acc], latest_usage={})
+
+    assert len(accounts_repo.status_updates) == 0
 
 
 @pytest.mark.asyncio

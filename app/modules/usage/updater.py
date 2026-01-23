@@ -88,7 +88,7 @@ class UsageUpdater:
                 account_id=usage_account_id,
             )
         except UsageFetchError as exc:
-            if _is_client_error(exc.status_code) and exc.status_code != 401:
+            if _should_deactivate_for_usage_error(exc.status_code):
                 await self._deactivate_for_client_error(account, exc)
                 return
             if exc.status_code != 401 or not self._auth_manager:
@@ -104,7 +104,7 @@ class UsageUpdater:
                     account_id=usage_account_id,
                 )
             except UsageFetchError as retry_exc:
-                if _is_client_error(retry_exc.status_code) and retry_exc.status_code != 401:
+                if _should_deactivate_for_usage_error(retry_exc.status_code):
                     await self._deactivate_for_client_error(account, retry_exc)
                 return
 
@@ -202,5 +202,8 @@ def _reset_at(reset_at: int | None, reset_after_seconds: int | None, now_epoch: 
     return now_epoch + max(0, int(reset_after_seconds))
 
 
-def _is_client_error(status_code: int) -> bool:
-    return 400 <= status_code < 500
+_DEACTIVATING_USAGE_STATUS_CODES = {402, 403, 404}
+
+
+def _should_deactivate_for_usage_error(status_code: int) -> bool:
+    return status_code in _DEACTIVATING_USAGE_STATUS_CODES
