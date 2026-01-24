@@ -23,14 +23,23 @@ def chat_to_responses_request(chat_req: ChatCompletionRequest) -> ResponsesReque
             })
         elif msg.role == "assistant":
             content_parts = _normalize_content_for_output(msg.content)
-            item: dict[str, JsonValue] = {
-                "type": "message",
-                "role": "assistant",
-                "content": content_parts,
-            }
+            if content_parts:
+                input_items.append({
+                    "type": "message",
+                    "role": "assistant",
+                    "content": content_parts,
+                })
+
             if msg.tool_calls:
-                item["tool_calls"] = msg.tool_calls
-            input_items.append(item)
+                for tool_call in msg.tool_calls:
+                    if isinstance(tool_call, dict) and tool_call.get("type") == "function":
+                        func = tool_call.get("function", {})
+                        input_items.append({
+                            "type": "function_call",
+                            "call_id": tool_call.get("id"),
+                            "name": func.get("name"),
+                            "arguments": func.get("arguments"),
+                        })
         elif msg.role == "tool":
             input_items.append({
                 "type": "function_call_output",
@@ -85,7 +94,6 @@ def _normalize_content_for_input(content: str | list[JsonValue] | None) -> str |
         return ""
     if isinstance(content, str):
         return content
-    # If list, check if it's just text
     if all(isinstance(x, str) or (isinstance(x, dict) and x.get("type") == "text") for x in content):
         return _extract_content_text(content)
         
@@ -102,7 +110,6 @@ def _normalize_content_for_input(content: str | list[JsonValue] | None) -> str |
 
 
 def _normalize_content_for_output(content: str | list[JsonValue] | None) -> str | list[JsonValue]:
-    # Assistant content in requests behaves like input content (history)
     return _normalize_content_for_input(content)
 
 
