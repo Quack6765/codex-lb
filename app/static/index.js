@@ -12,7 +12,8 @@
 		usageSummary: "/api/usage/summary",
 		usageWindow: (window) =>
 			`/api/usage/window?window=${encodeURIComponent(window)}`,
-		requestLogs: (limit) => `/api/request-logs?limit=${limit}`,
+		requestLogs: "/api/request-logs",
+		requestLogOptions: "/api/request-logs/options",
 		oauthStart: "/api/oauth/start",
 		oauthStatus: "/api/oauth/status",
 		oauthComplete: "/api/oauth/complete",
@@ -79,8 +80,19 @@
 		ok: "active",
 		rate_limit: "limited",
 		quota: "exceeded",
-		error: "deactivated",
+		error: "error",
 	};
+
+	const MODEL_OPTION_DELIMITER = ":::";
+
+	const createDefaultRequestFilters = () => ({
+		search: "",
+		timeframe: "all",
+		accountIds: [],
+		modelOptions: [],
+		statuses: [],
+		minCost: "",
+	});
 
 	const KNOWN_PLAN_TYPES = new Set([
 		"free",
@@ -180,10 +192,15 @@
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	});
-	const timeLongFormatter = new Intl.DateTimeFormat("en-US", {
+	const timeFormatter = new Intl.DateTimeFormat("en-US", {
 		hour: "2-digit",
 		minute: "2-digit",
 		second: "2-digit",
+	});
+	const dateFormatter = new Intl.DateTimeFormat("en-US", {
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
 	});
 
 	const createEmptyDashboardData = () => ({
@@ -373,9 +390,12 @@
 	const formatTimeLong = (iso) => {
 		const date = parseDate(iso);
 		if (!date) {
-			return "--";
+			return { time: "--", date: "--" };
 		}
-		return timeLongFormatter.format(date);
+		return {
+			time: timeFormatter.format(date),
+			date: dateFormatter.format(date),
+		};
 	};
 
 	const formatRelative = (ms) => {
@@ -1055,6 +1075,9 @@
 			const rawError = request.errorMessage || request.errorCode || "";
 			const accountLabel = formatAccountLabel(request.accountId, accounts);
 			const modelLabel = formatModelLabel(request.model, request.reasoningEffort);
+			const totalTokens = formatCompactNumber(request.tokens);
+			const cachedInputTokens = toNumber(request.cachedInputTokens);
+			const cachedTokens = cachedInputTokens > 0 ? formatCompactNumber(cachedInputTokens) : null;
 			return {
 				key: `${request.requestId}-${request.timestamp}`,
 				requestId: request.requestId,
@@ -1065,10 +1088,16 @@
 					class: requestStatusClass(request.status),
 					label: requestStatusLabel(request.status),
 				},
-				tokens: formatTokensWithCached(request.tokens, request.cachedInputTokens),
+				tokens: {
+					total: totalTokens,
+					cached: cachedTokens,
+				},
+				tokensTooltip: formatTokensWithCached(request.tokens, request.cachedInputTokens),
 				cost: formatCurrency(request.cost),
 				error: rawError ? truncateText(rawError, 80) : "--",
 				errorTitle: rawError,
+				isTruncated: rawError.length > 20,
+				isErrorPlaceholder: !rawError,
 			};
 		});
 
@@ -1237,8 +1266,107 @@
 	const fetchUsageWindow = async (window) =>
 		fetchJson(API_ENDPOINTS.usageWindow(window), `usage window (${window})`);
 
-	const fetchRequestLogs = async (limit) =>
-		fetchJson(API_ENDPOINTS.requestLogs(limit), "request logs");
+	const parseMinCostUsd = (value) => {
+		if (value === null || value === undefined) {
+			return null;
+		}
+		const asString = String(value).trim();
+		if (!asString) {
+			return null;
+		}
+		const numeric = Number(asString);
+		return Number.isFinite(numeric) ? numeric : null;
+	};
+
+	const buildSinceIsoFromTimeframe = (timeframe) => {
+		const now = Date.now();
+		if (timeframe === "1h") {
+			return new Date(now - 60 * 60 * 1000).toISOString();
+		}
+		if (timeframe === "24h") {
+			return new Date(now - 24 * 60 * 60 * 1000).toISOString();
+		}
+		if (timeframe === "7d") {
+			return new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+		}
+		return null;
+	};
+
+	const buildRequestLogsQueryParams = ({ filters, pagination }) => {
+		const params = {
+			limit: pagination?.limit,
+			offset: pagination?.offset,
+		};
+		if (filters?.search) {
+			params.search = filters.search;
+		}
+		if (Array.isArray(filters?.accountIds) && filters.accountIds.length) {
+			params.accountId = filters.accountIds.filter(Boolean);
+		}
+		if (Array.isArray(filters?.modelOptions) && filters.modelOptions.length) {
+			params.modelOption = filters.modelOptions.filter(Boolean);
+		}
+		if (Array.isArray(filters?.statuses) && filters.statuses.length) {
+			params.status = filters.statuses.filter(Boolean);
+		}
+		const since = buildSinceIsoFromTimeframe(filters?.timeframe);
+		if (since) {
+			params.since = since;
+		}
+		return params;
+	};
+
+	const applyClientSideRequestFilters = (requests, filters) => {
+		const minCostUsd = parseMinCostUsd(filters?.minCost);
+		if (minCostUsd === null) {
+			return requests;
+		}
+		return (requests || []).filter((entry) => (entry.cost || 0) >= minCostUsd);
+	};
+
+	const buildQueryString = (params) => {
+		const searchParams = new URLSearchParams();
+		if (!params || typeof params !== "object") {
+			return "";
+		}
+		for (const [key, value] of Object.entries(params)) {
+			if (value === null || value === undefined) {
+				continue;
+			}
+			if (Array.isArray(value)) {
+				const filtered = value
+					.map((item) => String(item ?? "").trim())
+					.filter(Boolean);
+				for (const item of filtered) {
+					searchParams.append(key, item);
+				}
+				continue;
+			}
+			if (typeof value === "string" && value.trim() === "") {
+				continue;
+			}
+			searchParams.append(key, String(value));
+		}
+		return searchParams.toString();
+	};
+
+	const fetchRequestLogs = async (params) => {
+		const query = buildQueryString(params);
+		return fetchJson(
+			query ? `${API_ENDPOINTS.requestLogs}?${query}` : API_ENDPOINTS.requestLogs,
+			"request logs",
+		);
+	};
+
+	const fetchRequestLogOptions = async (params) => {
+		const query = buildQueryString(params);
+		return fetchJson(
+			query
+				? `${API_ENDPOINTS.requestLogOptions}?${query}`
+				: API_ENDPOINTS.requestLogOptions,
+			"request log options",
+		);
+	};
 
 	const normalizeSettingsPayload = (payload) => ({
 		stickyThreadsEnabled: Boolean(payload?.stickyThreadsEnabled),
@@ -1258,6 +1386,24 @@
 			ui: createUiConfig(),
 			dashboardData: createEmptyDashboardData(),
 			dashboard: createEmptyDashboardView(),
+
+			filtersDraft: createDefaultRequestFilters(),
+			filtersApplied: createDefaultRequestFilters(),
+			pagination: {
+				limit: 25,
+				offset: 0,
+			},
+			recentRequestsState: {
+				isLoading: false,
+				error: "",
+			},
+			requestLogOptions: {
+				accountIds: [],
+				modelOptions: [],
+				isLoading: false,
+				error: "",
+			},
+
 			settings: {
 				stickyThreadsEnabled: false,
 				preferEarlierResetAccounts: false,
@@ -1305,12 +1451,19 @@
 			isLoading: true,
 			hasInitialized: false,
 			refreshPromise: null,
+
 			async init() {
 				if (this.hasInitialized) {
 					return;
 				}
 				this.hasInitialized = true;
 				this.view = getViewFromPath(window.location.pathname);
+
+				this.$watch("pagination.limit", () => {
+					this.pagination.offset = 0;
+					this.refreshRequests();
+				});
+
 				await this.loadData();
 				this.syncTitle();
 				this.syncUrl(true);
@@ -1329,6 +1482,115 @@
 					}
 				});
 			},
+
+			async refreshRequests() {
+				try {
+					this.recentRequestsState.isLoading = true;
+					this.recentRequestsState.error = "";
+					const params = buildRequestLogsQueryParams({
+						filters: this.filtersApplied,
+						pagination: this.pagination,
+					});
+					const requestsData = await fetchRequestLogs(params);
+					const normalized = normalizeRequestLogsPayload(requestsData);
+					const requests = applyClientSideRequestFilters(
+						normalized,
+						this.filtersApplied,
+					);
+
+					this.dashboardData.recentRequests = requests;
+
+					this.dashboard = buildDashboardView(this);
+				} catch (err) {
+					this.recentRequestsState.error =
+						err?.message || "Failed to refresh requests.";
+					console.error("Failed to refresh requests:", err);
+				} finally {
+					this.recentRequestsState.isLoading = false;
+				}
+			},
+
+			applyFilters() {
+				this.pagination.offset = 0;
+				const accountIds = Array.isArray(this.filtersDraft.accountIds)
+					? [...new Set(this.filtersDraft.accountIds.map(String).filter(Boolean))]
+					: [];
+				const modelOptions = Array.isArray(this.filtersDraft.modelOptions)
+					? [...new Set(this.filtersDraft.modelOptions.map(String).filter(Boolean))]
+					: [];
+				const statuses = Array.isArray(this.filtersDraft.statuses)
+					? [...new Set(this.filtersDraft.statuses.map(String).filter(Boolean))]
+					: [];
+				this.filtersApplied = {
+					...createDefaultRequestFilters(),
+					...this.filtersDraft,
+					accountIds,
+					modelOptions,
+					statuses,
+				};
+				this.refreshRequests();
+			},
+
+			resetFilters() {
+				this.filtersDraft = createDefaultRequestFilters();
+				this.applyFilters();
+			},
+
+			accountFilterLabel(accountId) {
+				return formatAccountLabel(accountId, this.accounts.rows);
+			},
+
+			modelOptionValue(option) {
+				const model = String(option?.model || "").trim();
+				const effort = String(option?.reasoningEffort || "").trim();
+				return `${model}${MODEL_OPTION_DELIMITER}${effort}`;
+			},
+
+			modelOptionLabel(option) {
+				return formatModelLabel(option?.model, option?.reasoningEffort);
+			},
+
+			toggleMultiSelectValue(listKey, rawValue) {
+				const value = String(rawValue ?? "").trim();
+				if (!value) {
+					return;
+				}
+				const current = Array.isArray(this.filtersDraft[listKey])
+					? [...this.filtersDraft[listKey]]
+					: [];
+				const index = current.indexOf(value);
+				if (index >= 0) {
+					current.splice(index, 1);
+				} else {
+					current.push(value);
+				}
+				this.filtersDraft = { ...this.filtersDraft, [listKey]: current };
+			},
+
+			multiSelectSummary(values, emptyLabel, singularLabel, pluralLabel) {
+				const list = Array.isArray(values)
+					? values.map((value) => String(value ?? "").trim()).filter(Boolean)
+					: [];
+				if (list.length === 0) {
+					return emptyLabel;
+				}
+				if (list.length === 1) {
+					return `1 ${singularLabel}`;
+				}
+				const plural = pluralLabel ? String(pluralLabel) : `${singularLabel}s`;
+				return `${list.length} ${plural}`;
+			},
+
+			timeframeLabel(value) {
+				const labels = {
+					all: "All time",
+					"1h": "Last 1h",
+					"24h": "Last 24h",
+					"7d": "Last 7d",
+				};
+				return labels[value] || "All time";
+			},
+
 			async loadData() {
 				try {
 					await this.refreshAll({ silent: true });
@@ -1351,22 +1613,32 @@
 					return this.refreshPromise;
 				}
 				const { preferredId, silent = false } = options;
+				this.requestLogOptions.isLoading = true;
+				this.requestLogOptions.error = "";
 				this.refreshPromise = (async () => {
+					const params = buildRequestLogsQueryParams({
+						filters: this.filtersApplied,
+						pagination: this.pagination,
+					});
+
 					const [
 						accountsResult,
 						summaryResult,
 						primaryResult,
 						secondaryResult,
 						requestLogsResult,
+						requestLogOptionsResult,
 						settingsResult,
 					] = await Promise.allSettled([
 						fetchAccounts(),
 						fetchUsageSummary(),
 						fetchUsageWindow("primary"),
 						fetchUsageWindow("secondary"),
-						fetchRequestLogs(50),
+						fetchRequestLogs(params),
+						fetchRequestLogOptions({}),
 						fetchSettings(),
 					]);
+
 					const errors = [];
 					if (accountsResult.status !== "fulfilled") {
 						throw accountsResult.reason;
@@ -1398,6 +1670,21 @@
 						errors.push(requestLogsResult.reason);
 					}
 
+					if (requestLogOptionsResult.status === "fulfilled") {
+						const payload = requestLogOptionsResult.value;
+						this.requestLogOptions.accountIds = Array.isArray(payload?.accountIds)
+							? payload.accountIds
+							: [];
+						this.requestLogOptions.modelOptions = Array.isArray(payload?.modelOptions)
+							? payload.modelOptions
+							: [];
+					} else {
+						this.requestLogOptions.error =
+							requestLogOptionsResult.reason?.message ||
+							"Failed to load request log options.";
+						errors.push(requestLogOptionsResult.reason);
+					}
+
 					const settings =
 						settingsResult.status === "fulfilled" ? settingsResult.value : null;
 					if (settingsResult.status === "rejected") {
@@ -1415,7 +1702,10 @@
 							summary,
 							primaryUsage,
 							secondaryUsage,
-							requestLogs,
+							requestLogs: applyClientSideRequestFilters(
+								requestLogs,
+								this.filtersApplied,
+							),
 							settings,
 						},
 						preferredId,
@@ -1437,6 +1727,7 @@
 					await this.refreshPromise;
 				} finally {
 					this.refreshPromise = null;
+					this.requestLogOptions.isLoading = false;
 				}
 			},
 			applyData(data, preferredId) {
@@ -1960,15 +2251,19 @@
 			},
 			get statusItems() {
 				const lastSync = formatTimeLong(this.dashboardData.lastSyncAt);
+				const lastSyncLabel =
+					lastSync && lastSync.time && lastSync.time !== "--"
+						? `${lastSync.time} · ${lastSync.date}`
+						: "--";
 				const items =
 					this.view === "accounts"
 						? [
 							`Selection: ${this.accounts.selectedId || "--"}`,
 							`Rotation: ${this.dashboardData.routing?.rotationEnabled ? "enabled" : "disabled"}`,
-							`Last sync: ${lastSync}`,
+							`Last sync: ${lastSyncLabel}`,
 						]
 						: [
-							`Last sync: ${lastSync}`,
+							`Last sync: ${lastSyncLabel}`,
 							`Routing: ${routingLabel(this.dashboardData.routing?.strategy)}`,
 							`Backend: ${this.backendPath}`,
 						];
