@@ -27,7 +27,7 @@ async def chat_completions(
         stream = context.service.stream_chat_completions(
             payload,
             request.headers,
-            propagate_http_errors=True,
+            propagate_http_errors=False,
         )
         try:
             first = await stream.__anext__()
