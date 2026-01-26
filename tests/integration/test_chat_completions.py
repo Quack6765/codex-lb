@@ -146,6 +146,77 @@ async def test_chat_completions_streams_via_responses_api(async_client, monkeypa
 
 
 @pytest.mark.asyncio
+async def test_chat_completions_closes_upstream_stream_on_retry(async_client, monkeypatch):
+    email = "chat-retry@example.com"
+    raw_account_id = "acc_chat_retry"
+    auth_json = _make_auth_json(raw_account_id, email)
+    files = {"auth_json": ("auth.json", json.dumps(auth_json), "application/json")}
+    response = await async_client.post("/api/accounts/import", files=files)
+    assert response.status_code == 200
+
+    tracker = {"opened": 0, "closed": 0}
+    call_count = {"n": 0}
+
+    class TrackedStream:
+        def __init__(self, lines: list[str]) -> None:
+            self._lines = lines
+            self._index = 0
+            self._closed = False
+            tracker["opened"] += 1
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self) -> str:
+            if self._closed or self._index >= len(self._lines):
+                raise StopAsyncIteration
+            line = self._lines[self._index]
+            self._index += 1
+            return line
+
+        async def aclose(self) -> None:
+            if not self._closed:
+                self._closed = True
+                tracker["closed"] += 1
+
+    def fake_responses_stream(payload, headers, access_token, account_id, base_url=None, raise_for_status=False):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            # Trigger the service's retry path (first event is terminal error)
+            return TrackedStream([
+                (
+                    'data: {"type":"response.failed","response":{"id":"resp_1","status":"failed",'
+                    '"error":{"message":"temporary failure"}}}\n\n'
+                ),
+            ])
+        return TrackedStream([
+            'data: {"type":"response.created","response":{"id":"resp_2"}}\n\n',
+            'data: {"type":"response.output_text.delta","delta":"Hello"}\n\n',
+            'data: {"type":"response.completed","response":{"id":"resp_2","status":"completed"}}\n\n',
+        ])
+
+    monkeypatch.setattr(chat_service_module, "core_stream_responses", fake_responses_stream)
+
+    payload = {
+        "model": "gpt-4",
+        "messages": [{"role": "user", "content": "Hello"}],
+        "stream": True,
+    }
+    async with async_client.stream(
+        "POST",
+        "/v1/chat/completions",
+        json=payload,
+    ) as resp:
+        assert resp.status_code == 200
+        lines = [line async for line in resp.aiter_lines() if line]
+
+    chunks = _extract_chunks_from_sse(lines)
+    assert any("Hello" in chunk["choices"][0]["delta"].get("content", "") for chunk in chunks)
+    assert call_count["n"] == 2
+    assert tracker["opened"] == tracker["closed"]
+
+
+@pytest.mark.asyncio
 async def test_chat_to_responses_conversion(async_client):
     from app.core.openai.chat_completions import ChatCompletionRequest, ChatCompletionMessage
     from app.core.openai.chat_to_responses import chat_to_responses_request

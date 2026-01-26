@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from contextlib import aclosing
 from typing import AsyncIterator, Mapping
 
 import anyio
@@ -122,19 +123,20 @@ class ChatCompletionsService:
                 raise_for_status=True,
             )
 
-            async for line in stream:
-                event = parse_sse_event(line)
-                if event and event.type == "response.completed":
-                    if event.response:
-                        full_response_data = event.response.model_dump(exclude_none=True)
-                elif event and event.type in ("response.failed", "error"):
-                    error = event.response.error if event.response else event.error
-                    code = _normalize_error_code(
-                        error.code if error else None,
-                        error.type if error else None,
-                    )
-                    message = error.message if error else "Request failed"
-                    raise ProxyResponseError(500, openai_error(code, message))
+            async with aclosing(stream):
+                async for line in stream:
+                    event = parse_sse_event(line)
+                    if event and event.type == "response.completed":
+                        if event.response:
+                            full_response_data = event.response.model_dump(exclude_none=True)
+                    elif event and event.type in ("response.failed", "error"):
+                        error = event.response.error if event.response else event.error
+                        code = _normalize_error_code(
+                            error.code if error else None,
+                            error.type if error else None,
+                        )
+                        message = error.message if error else "Request failed"
+                        raise ProxyResponseError(500, openai_error(code, message))
 
             return responses_to_chat_response(full_response_data, request_id, payload.model)
 
@@ -269,56 +271,57 @@ class ChatCompletionsService:
                 account_id_header,
                 raise_for_status=True,
             )
-            iterator = stream.__aiter__()
-            try:
-                first = await iterator.__anext__()
-            except StopAsyncIteration:
-                return
+            async with aclosing(stream):
+                iterator = stream.__aiter__()
+                try:
+                    first = await iterator.__anext__()
+                except StopAsyncIteration:
+                    return
 
-            event = parse_sse_event(first)
-            if event and event.type in ("response.failed", "error"):
-                if event.type == "response.failed":
-                    response = event.response
-                    error = response.error if response else None
-                else:
-                    error = event.error
-                code = _normalize_error_code(
-                    error.code if error else None,
-                    error.type if error else None,
-                )
-                status = "error"
-                error_code = code
-                error_message = error.message if error else None
-                if allow_retry:
-                    raise _RetryableChatError(code, UpstreamError())
+                event = parse_sse_event(first)
+                if event and event.type in ("response.failed", "error"):
+                    if event.type == "response.failed":
+                        response = event.response
+                        error = response.error if response else None
+                    else:
+                        error = event.error
+                    code = _normalize_error_code(
+                        error.code if error else None,
+                        error.type if error else None,
+                    )
+                    status = "error"
+                    error_code = code
+                    error_message = error.message if error else None
+                    if allow_retry:
+                        raise _RetryableChatError(code, UpstreamError())
 
-            for chunk in converter.convert_sse_line(first):
-                yield chunk
-
-            async for line in iterator:
-                event = parse_sse_event(line)
-                if event:
-                    if event.type in ("response.failed", "error"):
-                        status = "error"
-                        if event.type == "response.failed":
-                            response = event.response
-                            error = response.error if response else None
-                        else:
-                            error = event.error
-                        error_code = _normalize_error_code(
-                            error.code if error else None,
-                            error.type if error else None,
-                        )
-                        error_message = error.message if error else None
-                    elif event.type == "response.completed":
-                        if event.response and event.response.usage:
-                            input_tokens = event.response.usage.input_tokens
-                            output_tokens = event.response.usage.output_tokens
-
-                for chunk in converter.convert_sse_line(line):
+                for chunk in converter.convert_sse_line(first):
                     yield chunk
 
-            yield converter.format_done()
+                async for line in iterator:
+                    event = parse_sse_event(line)
+                    if event:
+                        if event.type in ("response.failed", "error"):
+                            status = "error"
+                            if event.type == "response.failed":
+                                response = event.response
+                                error = response.error if response else None
+                            else:
+                                error = event.error
+                            error_code = _normalize_error_code(
+                                error.code if error else None,
+                                error.type if error else None,
+                            )
+                            error_message = error.message if error else None
+                        elif event.type == "response.completed":
+                            if event.response and event.response.usage:
+                                input_tokens = event.response.usage.input_tokens
+                                output_tokens = event.response.usage.output_tokens
+
+                    for chunk in converter.convert_sse_line(line):
+                        yield chunk
+
+                yield converter.format_done()
 
         except ProxyResponseError as exc:
             error = _parse_openai_error(exc.payload)

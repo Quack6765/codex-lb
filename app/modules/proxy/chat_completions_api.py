@@ -35,7 +35,11 @@ async def chat_completions(
             return StreamingResponse(
                 _prepend_first(None, stream),
                 media_type="text/event-stream",
-                headers={"Cache-Control": "no-cache", **rate_limit_headers},
+                headers={
+                    "Cache-Control": "no-cache",
+                    "X-Accel-Buffering": "no",
+                    **rate_limit_headers,
+                },
             )
         except ProxyResponseError as exc:
             logger.warning("Chat completions proxy error status=%d payload=%s", exc.status_code, exc.payload)
@@ -43,7 +47,11 @@ async def chat_completions(
         return StreamingResponse(
             _prepend_first(first, stream),
             media_type="text/event-stream",
-            headers={"Cache-Control": "no-cache", **rate_limit_headers},
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                **rate_limit_headers,
+            },
         )
 
     try:

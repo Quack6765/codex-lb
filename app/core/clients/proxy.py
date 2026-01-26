@@ -138,7 +138,7 @@ async def _error_payload_from_response(resp: ErrorResponse) -> OpenAIErrorEnvelo
         data = await resp.json(content_type=None)
     except Exception:
         text = await resp.text()
-        message = text.strip() or start_message
+        message = text.strip() or fallback_message
         return openai_error("upstream_error", message)
 
     if isinstance(data, dict):
@@ -149,11 +149,11 @@ async def _error_payload_from_response(resp: ErrorResponse) -> OpenAIErrorEnvelo
         try:
             raw_str = json.dumps(data)
             if len(raw_str) < 500:
-                return openai_error("upstream_error", f"{start_message} - {raw_str}")
+                return openai_error("upstream_error", f"{fallback_message} - {raw_str}")
         except Exception:
             pass
             
-    return openai_error("upstream_error", start_message)
+    return openai_error("upstream_error", fallback_message)
 
 
 async def stream_responses(
